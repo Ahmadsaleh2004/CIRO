@@ -1,0 +1,70 @@
+body{
+    background:#121212;
+    color:#ffffff;
+}
+
+.custom-navbar{
+    background:#1b1b1b;
+}
+
+.navbar-brand,
+.nav-link{
+    color:white !important;
+}
+
+.nav-link:hover{
+    color:#0d6efd !important;
+}
+
+.product-card{
+    background:#1e1e1e;
+    color:white;
+}
+
+.quantity-btn{
+    background:#2d2d2d;
+    color:white;
+}
+
+.cart-item{
+    background:#1e1e1e;
+}
+
+.total-box{
+    background:#1e1e1e;
+}
+
+.about-card{
+    background:#1e1e1e;
+}
+
+.contact-card{
+    background:#1e1e1e;
+}
+
+.footer{
+    background:#1b1b1b;
+}
+
+input,
+textarea,
+select{
+    background:#2b2b2b !important;
+    color:white !important;
+    border:1px solid #444 !important;
+}
+
+input::placeholder,
+textarea::placeholder{
+    color:#bdbdbd !important;
+}
+
+.card{
+    background:#1e1e1e;
+    color:white;
+}
+
+.modal-content{
+    background:#1e1e1e;
+    color:white;
+}
