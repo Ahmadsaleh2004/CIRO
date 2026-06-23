@@ -1,0 +1,12 @@
+/* ==================================================
+   dark-theme.css
+   هذا الملف يعتمد بالكامل على متغيرات CSS المعرّفة
+   في style.css تحت body.dark-mode { ... }
+   لا يوجد أي لون مثبّت هنا — كل شيء يتحول تلقائياً
+   ================================================== */
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.35s ease, color 0.35s ease;
+}
