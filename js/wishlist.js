@@ -1,6 +1,18 @@
 let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 
 document.addEventListener("DOMContentLoaded", () => {
+    // skeleton أثناء أي تأخير
+    const container = document.getElementById("wishlist-container");
+    if (container && wishlist.length > 0) {
+        container.innerHTML = Array(Math.min(wishlist.length, 3)).fill(`
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line short"></div>
+            </div>
+        </div>`).join('');
+    }
     renderWishlist();
 });
 
@@ -37,9 +49,9 @@ function renderWishlist() {
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card product-card h-100 shadow border-0">
 
-                <button class="favorite-btn remove-favorite" data-id="${product.id}">❤️</button>
+                <button class="favorite-btn remove-favorite" data-id="${product.id}" aria-label="Remove ${product.name} from wishlist">❤️</button>
 
-                <a href="/Task(1)/pages/product-details.php?id=${product.id}" style="text-decoration:none;">
+                <a href="/Task(1)/pages/product-details.php?id=${product.id}" style="text-decoration:none;" aria-label="View ${product.name}">
                     <img
                         src="${imgSrc}"
                         class="card-img-top product-image"
@@ -52,19 +64,19 @@ function renderWishlist() {
                     <div class="mb-3">
                         <h5 class="fw-bold">${product.name}</h5>
                         <div class="price-box">
-                            <span class="new-price fs-5 text-primary fw-bold">$${product.price}</span>
+                            <span class="new-price fs-5 fw-bold" aria-label="Price: $${product.price}">$${product.price}</span>
                         </div>
                     </div>
 
                     <div>
-                        <div class="quantity-box mb-3 d-flex justify-content-center align-items-center gap-2">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="changeWishlistQty('${product.id}', -1)">−</button>
-                            <input type="number" value="1" id="qty-${product.id}" class="form-control quantity-input" style="width:60px; text-align:center;">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="changeWishlistQty('${product.id}', 1)">+</button>
+                        <div class="quantity-box mb-3 d-flex justify-content-center align-items-center gap-2" role="group" aria-label="Quantity">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="changeWishlistQty('${product.id}', -1)" aria-label="Decrease quantity">−</button>
+                            <input type="number" value="1" id="qty-${product.id}" class="form-control quantity-input" style="width:60px; text-align:center;" aria-label="Quantity">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="changeWishlistQty('${product.id}', 1)" aria-label="Increase quantity">+</button>
                         </div>
 
                         <div class="d-grid">
-                            <button class="btn btn-success add-cart" data-id="${product.id}">
+                            <button class="btn btn-success add-cart" data-id="${product.id}" aria-label="Add ${product.name} to cart">
                                 🛒 Add to Cart
                             </button>
                         </div>

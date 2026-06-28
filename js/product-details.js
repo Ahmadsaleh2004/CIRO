@@ -1,40 +1,80 @@
 // تحميل البيانات وتهيئة الصفحة
 document.addEventListener("DOMContentLoaded", async () => {
     let products = [];
-    
+    const container = document.getElementById("product-details");
+
+    // Skeleton أثناء التحميل
+    if (container) {
+        container.innerHTML = `
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <div class="skeleton" style="height:380px; border-radius:14px;"></div>
+            </div>
+            <div class="col-lg-6 d-flex flex-column gap-3 pt-3">
+                <div class="skeleton skeleton-line" style="height:32px; width:70%;"></div>
+                <div class="skeleton skeleton-line" style="height:24px; width:40%;"></div>
+                <div class="skeleton skeleton-line" style="height:16px;"></div>
+                <div class="skeleton skeleton-line" style="height:16px; width:85%;"></div>
+                <div class="skeleton skeleton-line" style="height:90px; border-radius:10px;"></div>
+                <div class="skeleton skeleton-line" style="height:48px; width:55%;"></div>
+            </div>
+        </div>`;
+    }
+
     try {
         const response = await fetch('/Task(1)/data/products.json');
-        if (!response.ok) throw new Error("فشل في تحميل المنتجات");
+        if (!response.ok) throw new Error("Failed to load products");
         products = await response.json();
     } catch (error) {
-        console.error("خطأ:", error);
+        console.error("Error:", error);
+        if (container) {
+            container.innerHTML = `
+            <div class="text-center py-5 fade-in-up">
+                <div style="font-size:4rem;">⚠️</div>
+                <h4 class="mt-3" style="color:var(--text-color);">Failed to load product</h4>
+                <p style="color:var(--placeholder-color);">Please check your connection and try again.</p>
+                <button class="btn btn-success mt-2" onclick="location.reload()">🔄 Retry</button>
+            </div>`;
+        }
         return;
     }
 
     const params = new URLSearchParams(window.location.search);
     const productId = parseInt(params.get("id"));
     const product = products.find(p => p.id === productId);
-    const container = document.getElementById("product-details");
+
+    if (!product) {
+        if (container) {
+            container.innerHTML = `
+            <div class="text-center py-5 fade-in-up">
+                <div style="font-size:4rem;">🔍</div>
+                <h4 class="mt-3" style="color:var(--text-color);">Product not found</h4>
+                <a href="/Task(1)/pages/products.php" class="btn btn-success mt-2">Browse Products</a>
+            </div>`;
+        }
+        return;
+    }
 
     if (product && container) {
         const { oldPrice, discount } = calculateDiscount(product.price);
         const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
         const isFavorite = wishlist.some(item => item.id === product.id);
+        const imgSrc = window.fixImagePath ? window.fixImagePath(product.image) : product.image;
 
         container.innerHTML = `
         <div class="row g-5 align-items-center">
             <div class="col-lg-6">
                 <div class="position-relative">
-                    <span class="discount-badge">-${discount}%</span>
-                    <button id="addWishlistBtn" class="favorite-btn">${isFavorite ? "❤️" : "🤍"}</button>
-                    <img src="${product.image}" class="img-fluid rounded shadow product-image" alt="${product.name}">
+                    <span class="discount-badge" aria-label="${discount}% discount">-${discount}%</span>
+                    <button id="addWishlistBtn" class="favorite-btn" aria-label="${isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}">${isFavorite ? "❤️" : "🤍"}</button>
+                    <img src="${imgSrc}" class="img-fluid rounded shadow product-image" alt="${product.name}">
                 </div>
             </div>
             <div class="col-lg-6">
                 <h1 class="fw-bold mb-3">${product.name}</h1>
                 <div class="price-box mb-3">
-                    <span class="new-price">$${product.price}</span>
-                    <span class="old-price">$${oldPrice}</span>
+                    <span class="new-price" aria-label="Current price: $${product.price}">$${product.price}</span>
+                    <span class="old-price" aria-label="Original price: $${oldPrice}">$${oldPrice}</span>
                 </div>
                 <p class="mb-4 product-description">${product.description}</p>
                 
@@ -55,12 +95,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                 </div>
 
-                <div class="quantity-box mb-4">
-                    <button id="minusBtn" class="btn btn-outline-secondary">-</button>
-                    <input type="number" value="1" min="1" id="productQty" class="form-control quantity-input">
-                    <button id="plusBtn" class="btn btn-outline-secondary">+</button>
+                <div class="quantity-box mb-4" role="group" aria-label="Quantity selector">
+                    <button id="minusBtn" class="btn btn-outline-secondary" aria-label="Decrease quantity">−</button>
+                    <input type="number" value="1" min="1" id="productQty" class="form-control quantity-input" aria-label="Product quantity">
+                    <button id="plusBtn" class="btn btn-outline-secondary" aria-label="Increase quantity">+</button>
                 </div>
-                <button id="addCartBtn" class="btn btn-success btn-lg px-5">🛒 Add To Cart</button>
+                <button id="addCartBtn" class="btn btn-success btn-lg px-5" aria-label="Add ${product.name} to cart">🛒 Add To Cart</button>
             </div>
         </div>`;
 
@@ -69,6 +109,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         // breadcrumb name
         const bcName = document.getElementById("breadcrumb-name");
         if (bcName) bcName.textContent = product.name;
+
+        // Dynamic page title + OG meta tags
+        document.title = `${product.name} | Cairo Store`;
+        const setMeta = (prop, val, attr = "name") => {
+            let el = document.querySelector(`meta[${attr}="${prop}"]`);
+            if (!el) { el = document.createElement("meta"); el.setAttribute(attr, prop); document.head.appendChild(el); }
+            el.setAttribute("content", val);
+        };
+        setMeta("description", product.description);
+        setMeta("og:title",       `${product.name} | Cairo Store`, "property");
+        setMeta("og:description", product.description,              "property");
+        setMeta("og:image",       `https://cairostore.com${imgSrc}`, "property");
+        setMeta("og:type",        "product",                         "property");
 
         renderRelatedProducts(product.id, product.brand, products);
     }

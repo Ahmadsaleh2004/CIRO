@@ -55,14 +55,14 @@ function renderCart() {
                 <li class="mb-3 p-2 border-bottom border-secondary">
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="/Task(1)/pages/product-details.php?id=${item.id}" class="text-white text-decoration-none fw-bold">${item.name}</a>
-                        <button class="btn btn-sm btn-outline-danger remove-item" data-id="${item.id}">✖</button>
+                        <button class="btn btn-sm btn-outline-danger remove-item" data-id="${item.id}" aria-label="Remove ${item.name} from cart">✖</button>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <small>$${item.price} each</small>
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-outline-light minus" data-id="${item.id}">-</button>
-                            <span class="px-2 fw-bold">${item.quantity}</span>
-                            <button class="btn btn-sm btn-outline-light plus" data-id="${item.id}">+</button>
+                            <button class="btn btn-sm btn-outline-light minus" data-id="${item.id}" aria-label="Decrease quantity">-</button>
+                            <span class="px-2 fw-bold" aria-label="Quantity: ${item.quantity}">${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-light plus" data-id="${item.id}" aria-label="Increase quantity">+</button>
                         </div>
                     </div>
                 </li>`;
@@ -157,13 +157,22 @@ window.validateSignUp = function(event) {
     }
 };
 
-// --- 6. الحل الجذري لمشكلة تعليق الشاشة (Stuck Backdrop) ---
+// --- 6. الحل الجذري لمشكلة padding-right (Modal + Offcanvas) ---
+const fixBodyPadding = () => {
+    document.body.style.paddingRight = '0';
+    document.body.style.overflow = '';
+};
+
 document.addEventListener('show.bs.modal', () => {
     document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
 });
 
 document.addEventListener('hidden.bs.modal', () => {
     document.body.classList.remove('modal-open');
-    document.body.style.paddingRight = '';
+    fixBodyPadding();
     document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+});
+
+document.addEventListener('hidden.bs.offcanvas', () => {
+    fixBodyPadding();
 });

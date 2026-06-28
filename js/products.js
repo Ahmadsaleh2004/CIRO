@@ -107,13 +107,13 @@ function renderProducts(data) {
 
         return `
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card product-card h-100 shadow border-0 reveal">
+            <div class="card product-card h-100 shadow border-0 reveal" role="article" aria-label="${product.name}">
                 
-                <button class="favorite-btn" onclick="window.toggleWishlist(${product.id}, this)">
+                <button class="favorite-btn" onclick="window.toggleWishlist(${product.id}, this)" aria-label="${isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}">
                     ${isFavorite ? "❤️" : "🤍"}
                 </button>
 
-                <a href="/Task(1)/pages/product-details.php?id=${product.id}" style="text-decoration:none;">
+                <a href="/Task(1)/pages/product-details.php?id=${product.id}" style="text-decoration:none;" aria-label="View ${product.name} details">
                     <img 
                         src="${imgSrc}" 
                         class="card-img-top product-image" 
@@ -126,19 +126,19 @@ function renderProducts(data) {
                     <div class="mb-3">
                         <h5 class="fw-bold">${product.name}</h5>
                         <div class="price-box">
-                            <span class="new-price fs-5 fw-bold">$${product.price}</span>
+                            <span class="new-price fs-5 fw-bold" aria-label="Price: $${product.price}">$${product.price}</span>
                         </div>
                     </div>
                     
                     <div>
-                        <div class="quantity-box mb-3 d-flex justify-content-center align-items-center gap-2">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${product.id}', -1)">−</button>
-                            <input type="number" value="1" id="qty-${product.id}" class="form-control quantity-input" style="width:60px; text-align:center;">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${product.id}', 1)">+</button>
+                        <div class="quantity-box mb-3 d-flex justify-content-center align-items-center gap-2" role="group" aria-label="Select quantity for ${product.name}">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${product.id}', -1)" aria-label="Decrease quantity">−</button>
+                            <input type="number" value="1" id="qty-${product.id}" class="form-control quantity-input" style="width:60px; text-align:center;" aria-label="Quantity">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${product.id}', 1)" aria-label="Increase quantity">+</button>
                         </div>
                         
                         <div class="d-grid">
-                            <button class="btn btn-success add-cart" onclick="handleAddToCart('${product.id}')">
+                            <button class="btn btn-success add-cart" onclick="handleAddToCart('${product.id}')" aria-label="Add ${product.name} to cart">
                                 🛒 Add to Cart
                             </button>
                         </div>
@@ -312,13 +312,28 @@ function initProductPageControls() {
    Bootstrap — Init on DOM Ready
    ================================================ */
 document.addEventListener("DOMContentLoaded", async () => {
-    // skeleton أثناء التحميل
     if (document.getElementById("products-container")) {
         showSkeletons("products-container", 6);
     }
 
-    const res = await fetch('/Task(1)/data/products.json');
-    products = await res.json();
+    try {
+        const res = await fetch('/Task(1)/data/products.json');
+        if (!res.ok) throw new Error("Network error");
+        products = await res.json();
+    } catch (err) {
+        console.error("Failed to load products:", err);
+        const container = document.getElementById("products-container");
+        if (container) {
+            container.innerHTML = `
+            <div class="col-12 text-center py-5 fade-in-up">
+                <div style="font-size:4rem;">⚠️</div>
+                <h4 class="mt-3" style="color:var(--text-color);">Could not load products</h4>
+                <p style="color:var(--placeholder-color);">Please check your connection and try again.</p>
+                <button class="btn btn-success mt-2" onclick="location.reload()">🔄 Retry</button>
+            </div>`;
+        }
+        return;
+    }
 
     if (document.getElementById("products-container")) {
         renderProducts(products);

@@ -1,30 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products | Cairo Store</title>
-
-    <meta name="description"
-          content="Browse all products available at Cairo Store. Search, filter and discover the latest electronics.">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-
+    <meta name="description" content="Browse all products available at Cairo Store. Search, filter and discover the latest electronics.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Products | Cairo Store">
+    <meta property="og:description" content="Browse all products available at Cairo Store.">
+    <meta property="og:type" content="website">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dark-theme.css" id="theme-style" disabled>
-
 </head>
+<body class="page-transitioning">
 
-<body>
+<a href="#main-content" class="skip-nav">Skip to main content</a>
 
 <?php include "../components/navbar.php"; ?>
 
+<main id="main-content" role="main">
 <section class="container py-5">
 
     <!-- Breadcrumb -->
@@ -86,7 +81,6 @@
 
 <?php include "../components/footer.php"; ?>
 
-
+</main>
 </body>
-
 </html>

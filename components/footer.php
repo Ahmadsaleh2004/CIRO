@@ -45,7 +45,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <ul id="cart-items-list" class="list-unstyled">
+            <ul id="cart-items-list" class="list-unstyled" aria-label="Cart items">
                 <li class="text-center py-5" style="color: var(--placeholder-color);">Your cart is empty.</li>
             </ul>
 

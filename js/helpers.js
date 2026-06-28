@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCounters();
     initBackToTop();
     highlightNavIcons();
+    initPageTransitions();
+    initImageFallbacks();
     // initScrollReveal يتشتغل بعد ما products.js يبني الكاردات
 });
 
@@ -129,5 +131,83 @@ function highlightNavIcons() {
     }
     if (cartBtn) {
         cartBtn.classList.toggle("navbar-icon-active", cart.length > 0);
+    }
+}
+
+// 8. Page Transitions — overlay fade عند الانتقال بين الصفحات
+function initPageTransitions() {
+    // إنشاء الـ overlay
+    const overlay = document.createElement("div");
+    overlay.id = "page-overlay";
+    document.body.appendChild(overlay);
+
+    // fade out الـ overlay عند تحميل الصفحة (entering)
+    requestAnimationFrame(() => {
+        overlay.classList.remove("active");
+    });
+
+    // fade in الـ overlay عند الضغط على أي رابط داخلي
+    document.addEventListener("click", (e) => {
+        const link = e.target.closest("a[href]");
+        if (!link) return;
+
+        const href = link.getAttribute("href");
+
+        // نتجاهل الروابط الخارجية، anchors، modal triggers، external links
+        if (!href ||
+            href.startsWith("#") ||
+            href.startsWith("http") ||
+            href.startsWith("mailto") ||
+            href.startsWith("tel") ||
+            link.hasAttribute("data-bs-toggle") ||
+            link.hasAttribute("data-bs-target") ||
+            link.target === "_blank") return;
+
+        e.preventDefault();
+
+        // أظهر الـ overlay
+        overlay.classList.add("active");
+
+        // انتقل للصفحة بعد انتهاء الـ animation
+        setTimeout(() => {
+            window.location.href = href;
+        }, 240);
+    });
+
+    // لو المستخدم ضغط Back — اعمل fade in
+    window.addEventListener("pageshow", () => {
+        overlay.classList.remove("active");
+    });
+}
+
+// 9. Image Fallback — لو صورة مكسورة تظهر placeholder
+function initImageFallbacks() {
+    const fallbackSrc = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' font-size='14' fill='%239ca3af' text-anchor='middle' dy='.3em'%3EImage not found%3C/text%3E%3C/svg%3E";
+
+    // نراقب كل الصور في الصفحة
+    document.querySelectorAll("img").forEach(img => addFallback(img));
+
+    // نراقب الصور اللي بتتضاف لاحقاً (dynamic content)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) {
+                    if (node.tagName === "IMG") addFallback(node);
+                    node.querySelectorAll?.("img").forEach(img => addFallback(img));
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    function addFallback(img) {
+        if (img.dataset.fallbackSet) return;
+        img.dataset.fallbackSet = "1";
+        img.addEventListener("error", () => {
+            img.src = fallbackSrc;
+            img.classList.add("img-error");
+            img.alt = img.alt || "Image not available";
+        });
     }
 }
