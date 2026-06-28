@@ -78,9 +78,9 @@
     <div class="row" id="products-container"></div>
 
 </section>
+</main>
 
 <?php include "../components/footer.php"; ?>
 
-</main>
 </body>
 </html>

@@ -253,13 +253,30 @@ function initProductPageControls() {
 
     if (!searchInput && !sortSelect) return;
 
+    // قراءة الـ ?cat= من الـ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam  = urlParams.get("cat");
+
+    // خريطة الـ categories — تشتغل مع ?cat= في الـ URL
+    const categoryMap = {
+        phones:      p => /iphone|phone|mobile/i.test(p.name),
+        computers:   p => /macbook|laptop|computer|pc|ipad|tablet/i.test(p.name),
+        accessories: p => /airpods|headphones|earbuds|headset|cable|charger|case|watch/i.test(p.name),
+        gaming:      p => /ps\d|playstation|xbox|nintendo|controller|console|gaming/i.test(p.name),
+    };
+
     function applyFilters() {
         const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
         const sort  = sortSelect  ? sortSelect.value : "";
 
         let filtered = [...products];
 
-        // فلترة البحث — اسم أو brand أو description
+        // فلترة الـ ?cat= من الـ URL (تطبّق دائماً)
+        if (catParam && categoryMap[catParam]) {
+            filtered = filtered.filter(categoryMap[catParam]);
+        }
+
+        // فلترة البحث
         if (query) {
             filtered = filtered.filter(p =>
                 p.name.toLowerCase().includes(query) ||
@@ -296,6 +313,9 @@ function initProductPageControls() {
 
         renderProducts(filtered);
     }
+
+    // تطبيق الفلتر تلقائياً لو في ?cat= في الـ URL
+    if (catParam) applyFilters();
 
     if (searchInput) searchInput.addEventListener("input", applyFilters);
     if (sortSelect)  sortSelect.addEventListener("change", applyFilters);

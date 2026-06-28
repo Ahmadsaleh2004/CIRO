@@ -136,46 +136,53 @@ function highlightNavIcons() {
 
 // 8. Page Transitions — overlay fade عند الانتقال بين الصفحات
 function initPageTransitions() {
-    // إنشاء الـ overlay
     const overlay = document.createElement("div");
     overlay.id = "page-overlay";
     document.body.appendChild(overlay);
 
-    // fade out الـ overlay عند تحميل الصفحة (entering)
     requestAnimationFrame(() => {
         overlay.classList.remove("active");
     });
 
-    // fade in الـ overlay عند الضغط على أي رابط داخلي
     document.addEventListener("click", (e) => {
         const link = e.target.closest("a[href]");
         if (!link) return;
 
         const href = link.getAttribute("href");
 
-        // نتجاهل الروابط الخارجية، anchors، modal triggers، external links
-        if (!href ||
-            href.startsWith("#") ||
-            href.startsWith("http") ||
-            href.startsWith("mailto") ||
-            href.startsWith("tel") ||
-            link.hasAttribute("data-bs-toggle") ||
-            link.hasAttribute("data-bs-target") ||
-            link.target === "_blank") return;
+        // تجاهل كل الحالات الخاصة
+        if (!href) return;
+        if (href.startsWith("#")) return;
+        if (href.startsWith("http")) return;
+        if (href.startsWith("mailto")) return;
+        if (href.startsWith("tel")) return;
+        if (href.startsWith("javascript")) return;
+        if (link.hasAttribute("data-bs-toggle")) return;
+        if (link.hasAttribute("data-bs-target")) return;
+        if (link.hasAttribute("data-bs-dismiss")) return;
+        if (link.target === "_blank") return;
+
+        // تأكد إن مفيش modal أو offcanvas مفتوح
+        if (document.querySelector(".modal.show")) return;
+        if (document.querySelector(".offcanvas.show")) return;
 
         e.preventDefault();
-
-        // أظهر الـ overlay
         overlay.classList.add("active");
 
-        // انتقل للصفحة بعد انتهاء الـ animation
         setTimeout(() => {
             window.location.href = href;
         }, 240);
     });
 
-    // لو المستخدم ضغط Back — اعمل fade in
     window.addEventListener("pageshow", () => {
+        overlay.classList.remove("active");
+    });
+
+    // إخفاء الـ overlay لو فُتح modal أو offcanvas
+    document.addEventListener("show.bs.modal", () => {
+        overlay.classList.remove("active");
+    });
+    document.addEventListener("show.bs.offcanvas", () => {
         overlay.classList.remove("active");
     });
 }

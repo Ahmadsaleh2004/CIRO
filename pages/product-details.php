@@ -39,10 +39,10 @@
     <div class="row" id="related-products"></div>
 
 </div>
+</main>
 
 <?php include "../components/footer.php"; ?>
 <script src="/Task(1)/js/product-details.js"></script>
 
-</main>
 </body>
 </html>

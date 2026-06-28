@@ -848,7 +848,7 @@ main[role="main"] {
     position: fixed;
     inset: 0;
     background: var(--bg-color);
-    z-index: 99999;
+    z-index: 1040; /* أقل من Bootstrap modal (1055) وoffcanvas (1045) */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;

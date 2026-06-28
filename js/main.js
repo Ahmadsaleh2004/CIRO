@@ -163,10 +163,7 @@ const fixBodyPadding = () => {
     document.body.style.overflow = '';
 };
 
-document.addEventListener('show.bs.modal', () => {
-    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-});
-
+// نحذف الـ backdrop القديم فقط بعد إغلاق الـ modal مش قبل فتحه
 document.addEventListener('hidden.bs.modal', () => {
     document.body.classList.remove('modal-open');
     fixBodyPadding();
