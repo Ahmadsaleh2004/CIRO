@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /Task(1)/
+Allow: /Task(1)/pages/products.php
+Allow: /Task(1)/pages/product-details.php
+Allow: /Task(1)/pages/aboutus.php
+Allow: /Task(1)/pages/contactus.php
+Allow: /Task(1)/images/
+Allow: /Task(1)/css/
+Allow: /Task(1)/js/
+
+Disallow: /Task(1)/admin/
+Disallow: /Task(1)/config/
+Disallow: /Task(1)/helpers/
+Disallow: /Task(1)/handlers/
+Disallow: /Task(1)/backups/
+Disallow: /Task(1)/migrate.php
+Disallow: /Task(1)/pages/checkout.php
+Disallow: /Task(1)/pages/my-info.php
+Disallow: /Task(1)/pages/order-confirmation.php
+Disallow: /Task(1)/pages/wishlist.php
+
+Sitemap: https://cairostore.com/Task(1)/sitemap.php
