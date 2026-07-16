@@ -24,7 +24,7 @@ $items = $pdo->prepare("
 $items->execute([$orderId]);
 $items = $items->fetchAll();
 
-$statusColors = ['pending'=>'warning','shipped'=>'primary','completed'=>'success','cancelled'=>'danger'];
+$statusColors = ['not_taken'=>'warning text-dark','taken'=>'primary','completed'=>'success','cancelled'=>'danger'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

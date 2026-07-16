@@ -22,7 +22,7 @@ $returnPolicy = $ws['return_policy'] ?? '14-day return policy.';
 $csrf         = generateCsrfToken();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -260,8 +260,8 @@ async function placeOrder() {
     fd.append('csrf_token',  document.getElementById('csrfToken').value);
 
     try {
-        const res  = await fetch('/Task(1)/handlers/order_handler.php', {method:'POST', body:fd});
-        const data = await res.json();
+        const data = await fetchWithCsrfRetry('/Task(1)/handlers/order_handler.php', {method:'POST', body:fd});
+        if (data.csrf_token) updateCsrfToken(data.csrf_token);
         if (data.success) {
             localStorage.removeItem('cart');
             if (typeof refreshCartUI === 'function') refreshCartUI();

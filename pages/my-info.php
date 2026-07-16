@@ -37,31 +37,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $currentPass = $_POST['current_password'] ?? '';
 
     if (!password_verify($currentPass, $profile['password'])) {
-        $updateErr = 'كلمة السر الحالية غير صحيحة.';
+        $updateErr = 'Current password is incorrect.';
     } else {
-        if ($isAdm) {
-            $pdo->prepare("UPDATE admins SET full_name=?, phone_number=? WHERE id=?")
-                ->execute([trim($_POST['full_name']), trim($_POST['phone_number']), $adminId]);
-        } else {
-            $pdo->prepare("
-                UPDATE users
-                SET full_name=?, phone_number=?, country=?, city=?, gender=?, birth_date=?
-                WHERE id=?
-            ")->execute([
-                trim($_POST['full_name']),
-                trim($_POST['phone_number']) ?: null,
-                trim($_POST['country'])      ?: null,
-                trim($_POST['city'])         ?: null,
-                $_POST['gender']             ?? null,
-                $_POST['birth_date']         ?: null,
-                $userId,
-            ]);
+        if (!$isAdm) {
+            $phoneCode = trim($_POST['phone_country_code'] ?? '');
+            $phoneLocal = trim($_POST['phone_local'] ?? '');
+            $newPhone = $phoneCode . $phoneLocal;
+            $bd       = $_POST['birth_date'] ?? '';
+
+            // عمر 13+
+            if ($bd) {
+                $age = (int)date_diff(date_create($bd), date_create('today'))->y;
+                if ($age < 13) $updateErr = 'You must be at least 13 years old.';
+            }
+
+            // تفرّد رقم الهاتف (فقط إذا تغيّر)
+            if (!$updateErr && $newPhone && $newPhone !== $profile['phone_number']) {
+                $chk = $pdo->prepare("SELECT id FROM users WHERE phone_number=? AND id != ? LIMIT 1");
+                $chk->execute([$newPhone, $userId]);
+                if ($chk->fetch()) $updateErr = 'This phone number is already registered with another account.';
+            }
+
+            // عدد خانات الهاتف (نفس منطق register)
+            if (!$updateErr && $newPhone) {
+                $cleanPhone  = preg_replace('/[^\d+]/', '', $newPhone);
+                if (str_starts_with($cleanPhone, '+')) $cleanPhone = substr($cleanPhone, 1);
+                elseif (str_starts_with($cleanPhone, '00')) $cleanPhone = substr($cleanPhone, 2);
+                $cpLengths = ['962'=>[9],'20'=>[10],'966'=>[9],'971'=>[9],'965'=>[8],
+                              '974'=>[8],'973'=>[8],'968'=>[8],'1'=>[10],'44'=>[10],'90'=>[10],'49'=>[10,11]];
+                $localPart   = $cleanPhone;
+                $allowedLens = [7,8,9,10,11];
+                foreach ($cpLengths as $prefix => $lens) {
+                    if (str_starts_with($cleanPhone, (string)$prefix)) {
+                        $localPart = substr($cleanPhone, strlen((string)$prefix));
+                        $allowedLens = $lens;
+                        break;
+                    }
+                }
+                if (!ctype_digit($localPart) || !in_array(strlen($localPart), $allowedLens)) {
+                    $updateErr = 'Invalid phone number length for the selected country code.';
+                }
+            }
         }
-        $updateMsg = '✅ تم تحديث بياناتك بنجاح.';
+        if (!$updateErr) {
+        $newPass = trim($_POST['new_password'] ?? '');
+        if ($isAdm) {
+            if ($newPass) {
+                $newHash = password_hash($newPass, PASSWORD_BCRYPT, ['cost' => 12]);
+                $pdo->prepare("UPDATE admins SET full_name=?, phone_number=?, password=? WHERE id=?")
+                    ->execute([trim($_POST['full_name']), trim($_POST['phone_number']), $newHash, $adminId]);
+            } else {
+                $pdo->prepare("UPDATE admins SET full_name=?, phone_number=? WHERE id=?")
+                    ->execute([trim($_POST['full_name']), trim($_POST['phone_number']), $adminId]);
+            }
+        } else {
+            if ($newPass) {
+                $newHash = password_hash($newPass, PASSWORD_BCRYPT, ['cost' => 12]);
+                $pdo->prepare("
+                    UPDATE users
+                    SET full_name=?, phone_number=?, country=?, city=?, gender=?, birth_date=?, password=?
+                    WHERE id=?
+                ")->execute([
+                    trim($_POST['full_name']),
+                    $newPhone ?: null,
+                    trim($_POST['country'])      ?: null,
+                    trim($_POST['city'])         ?: null,
+                    $_POST['gender']             ?? null,
+                    $_POST['birth_date']         ?: null,
+                    $newHash,
+                    $userId,
+                ]);
+            } else {
+                $pdo->prepare("
+                    UPDATE users
+                    SET full_name=?, phone_number=?, country=?, city=?, gender=?, birth_date=?
+                    WHERE id=?
+                ")->execute([
+                    trim($_POST['full_name']),
+                    $newPhone ?: null,
+                    trim($_POST['country'])      ?: null,
+                    trim($_POST['city'])         ?: null,
+                    $_POST['gender']             ?? null,
+                    $_POST['birth_date']         ?: null,
+                    $userId,
+                ]);
+            }
+        }
+        $updateMsg = '✅ Your profile has been updated successfully.';
         $_SESSION[$isAdm ? 'admin_name' : 'user_name'] = trim($_POST['full_name']);
         // أعد جلب البيانات المحدّثة
         $stmt->execute([$isAdm ? $adminId : $userId]);
         $profile = $stmt->fetch();
+        } // end if !$updateErr
     }
 }
 
@@ -72,14 +139,14 @@ if ($isAdm && isRoleA() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST
     $newRole     = $_POST['new_role']     ?? '';
 
     if (!password_verify($confirmPass, $profile['password'])) {
-        $updateErr = 'كلمة السر غير صحيحة.';
+        $updateErr = 'Incorrect password.';
     } elseif (!in_array($newRole, ['A','B','C','D'])) {
-        $updateErr = 'رتبة غير صالحة.';
+        $updateErr = 'Invalid role.';
     } else {
         $pdo->prepare("UPDATE admins SET role=? WHERE id=?")->execute([$newRole, $adminId]);
         $_SESSION['admin_role'] = $newRole;
         logAdminAction($adminId, 'change_role', 'admin', $adminId, "changed own role to {$newRole}");
-        $updateMsg = "تم تغيير رتبتك إلى {$newRole}.";
+        $updateMsg = "Your role has been changed to {$newRole}.";
     }
 }
 
@@ -101,7 +168,7 @@ if (!$isAdm && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_addres
         trim($_POST['addr_phone'])   ?: null,
         !empty($_POST['is_default']) ? 1 : 0,
     ]);
-    $addrMsg = '✅ تمت إضافة العنوان.';
+    $addrMsg = '✅ Address added successfully.';
 }
 
 // ── حذف عنوان ────────────────────────────────────────────────
@@ -109,7 +176,7 @@ if (!$isAdm && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_add
     verifyCsrfToken($_POST['csrf_token'] ?? '');
     $pdo->prepare("DELETE FROM user_addresses WHERE id=? AND user_id=?")
         ->execute([(int)$_POST['addr_id'], $userId]);
-    $addrMsg = '✅ تم حذف العنوان.';
+    $addrMsg = '✅ Address deleted successfully.';
 }
 
 // ── تعيين عنوان افتراضي ──────────────────────────────────────
@@ -118,7 +185,7 @@ if (!$isAdm && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['set_defaul
     $pdo->prepare("UPDATE user_addresses SET is_default=0 WHERE user_id=?")->execute([$userId]);
     $pdo->prepare("UPDATE user_addresses SET is_default=1 WHERE id=? AND user_id=?")
         ->execute([(int)$_POST['addr_id'], $userId]);
-    $addrMsg = '✅ تم تعيين العنوان الافتراضي.';
+    $addrMsg = '✅ Default address updated.';
 }
 
 // ── جلب الطلبات ──────────────────────────────────────────────
@@ -148,10 +215,10 @@ if (!$isAdm && $userId) {
 }
 
 $csrf = generateCsrfToken();
-$statusColors = ['pending'=>'warning','shipped'=>'primary','completed'=>'success','cancelled'=>'danger'];
+$statusColors = ['not_taken'=>'warning text-dark','taken'=>'primary','completed'=>'success','cancelled'=>'danger'];
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -221,9 +288,33 @@ $statusColors = ['pending'=>'warning','shipped'=>'primary','completed'=>'success
                         </div>
                         <div class="col-md-6">
                             <div class="float-group">
-                                <input type="tel" name="phone_number" placeholder=" "
-                                       value="<?= htmlspecialchars($profile['phone_number'] ?? '') ?>">
-                                <label>Phone Number</label>
+                                <?php
+                                // استخرج كود الدولة والرقم المحلي من الرقم المحفوظ
+                                $savedPhone = $profile['phone_number'] ?? '';
+                                $countryPrefixes = ['+962','+ 966','+971','+20','+965','+974','+973','+968','+1','+44','+90','+49'];
+                                $detectedCode  = '';
+                                $localPhonePart = $savedPhone;
+                                foreach (['+962','+966','+971','+20','+965','+974','+973','+968','+1','+44','+90','+49'] as $pfx) {
+                                    if (str_starts_with($savedPhone, $pfx)) {
+                                        $detectedCode  = $pfx;
+                                        $localPhonePart = substr($savedPhone, strlen($pfx));
+                                        break;
+                                    }
+                                }
+                                ?>
+                                <div class="input-group">
+                                    <span class="input-group-text"
+                                          style="background:var(--input-bg);color:var(--placeholder-color);border:1.5px solid var(--input-border);cursor:not-allowed;"
+                                          title="Country code cannot be changed">
+                                        <?= htmlspecialchars($detectedCode ?: '🌍') ?>
+                                    </span>
+                                    <input type="hidden" name="phone_country_code" value="<?= htmlspecialchars($detectedCode) ?>">
+                                    <input type="tel" name="phone_local" id="infoPhoneLocal" placeholder=" "
+                                           value="<?= htmlspecialchars($localPhonePart) ?>"
+                                           class="form-control"
+                                           style="border-left:none;">
+                                </div>
+                                <label style="left:60px;">Phone Number</label>
                             </div>
                         </div>
 
@@ -260,15 +351,23 @@ $statusColors = ['pending'=>'warning','shipped'=>'primary','completed'=>'success
                         </div>
                         <?php endif; ?>
 
+                        <div class="col-md-6">
+                            <div class="float-group">
+                                <input type="password" name="new_password" id="infoNewPass" placeholder=" "
+                                       autocomplete="new-password">
+                                <label>New Password (leave blank to keep)</label>
+                            </div>
+                        </div>
+
                         <div class="col-12">
                             <div class="float-group">
-                                <input type="password" name="current_password" placeholder=" " required>
+                                <input type="password" name="current_password" id="infoCurrentPass" placeholder=" " required>
                                 <label>Current Password (required to save)</label>
                             </div>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-success px-5 mt-2">💾 Save Changes</button>
+                    <button id="infoSaveBtn" type="submit" class="btn btn-success px-5 mt-2 btn-disabled-faded" disabled aria-disabled="true">💾 Save Changes</button>
                 </form>
             </div>
         </div><!-- /tab-profile -->
@@ -423,7 +522,7 @@ $statusColors = ['pending'=>'warning','shipped'=>'primary','completed'=>'success
             <div class="card p-4">
                 <h4 class="mb-3">👑 Change My Role</h4>
                 <p class="small mb-3" style="color:var(--placeholder-color);">
-                    يتطلب تأكيد كلمة السر. تغيير الرتبة من A سيُقيّد صلاحياتك.
+                    Requires password confirmation. Changing role from A will restrict your permissions.
                 </p>
                 <?php if ($updateMsg): ?><div class="alert alert-success"><?= htmlspecialchars($updateMsg) ?></div><?php endif; ?>
                 <?php if ($updateErr): ?><div class="alert alert-danger"><?= htmlspecialchars($updateErr) ?></div><?php endif; ?>
@@ -468,6 +567,48 @@ function switchTab(name, btn) {
     target.classList.add('active-tab');
     btn.classList.add('active');
 }
+
+// ── My Info — تفعيل شرطي لزر الحفظ ─────────────────────────
+(function () {
+    const form        = document.querySelector('form[method="POST"] #infoSaveBtn')?.closest('form');
+    const currentPass = document.getElementById('infoCurrentPass');
+    const saveBtn     = document.getElementById('infoSaveBtn');
+    const nameInput   = form?.querySelector('input[name="full_name"]');
+    const phoneLocal  = document.getElementById('infoPhoneLocal');
+    const birthDate   = form?.querySelector('input[name="birth_date"]');
+    const isUser      = !!phoneLocal; // الأدمن ما عنده phone_local
+
+    if (!currentPass || !saveBtn) return;
+
+    function checkInfoValidity() {
+        const nameOk  = !nameInput  || nameInput.value.trim().length >= 2;
+        const passOk  = currentPass.value.trim().length > 0;
+
+        let ageOk = true;
+        if (birthDate && birthDate.value) {
+            const today = new Date();
+            const bd    = new Date(birthDate.value);
+            let age     = today.getFullYear() - bd.getFullYear();
+            const m     = today.getMonth() - bd.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+            ageOk = age >= 13;
+        }
+
+        let phoneOk = true;
+        if (isUser && phoneLocal) {
+            const local = phoneLocal.value.trim();
+            phoneOk = local.length >= 7 && /^\d+$/.test(local);
+        }
+
+        updateButtonState(saveBtn, nameOk && passOk && ageOk && phoneOk);
+    }
+
+    [currentPass, nameInput, phoneLocal, birthDate]
+        .filter(Boolean)
+        .forEach(el => el.addEventListener('input', checkInfoValidity));
+
+    checkInfoValidity();
+})();
 </script>
 </body>
 </html>

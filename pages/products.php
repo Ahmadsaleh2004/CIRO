@@ -10,7 +10,7 @@ require_once __DIR__ . '/../config/db.php';
 
 $pdo  = getDB();
 $msg  = '';
-$isAdminProd = isAdmin() && hasPermission('can_manage_products');
+$isAdminProd = isAdmin() && hasPermission('can_manage_products') && empty($_SESSION['admin_in_store_mode']);
 
 // ── حذف منتج (الأدمن فقط) ───────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product']) && $isAdminProd) {
@@ -19,19 +19,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product']) && 
     if ($pid) {
         $pdo->prepare("DELETE FROM products WHERE id=?")->execute([$pid]);
         logAdminAction(getCurrentAdminId(), 'delete_product', 'product', $pid);
-        $msg = '✅ تم حذف المنتج.';
+        $msg = '✅ Product deleted successfully.';
     }
 }
 
-// ── جلب المنتجات من DB ───────────────────────────────────────
-$products = $pdo->query("
-    SELECT p.*, GROUP_CONCAT(DISTINCT c.name ORDER BY c.name) AS categories
+// ── Pagination ───────────────────────────────────────────────
+define('PRODUCTS_PER_PAGE', 24);
+$currentPage = max(1, (int)($_GET['page'] ?? 1));
+$offset      = ($currentPage - 1) * PRODUCTS_PER_PAGE;
+
+// عدد المنتجات الكلي
+$totalProducts = (int)$pdo->query("SELECT COUNT(*) FROM products")->fetchColumn();
+$totalPages    = max(1, (int)ceil($totalProducts / PRODUCTS_PER_PAGE));
+$currentPage   = min($currentPage, $totalPages);
+$offset        = ($currentPage - 1) * PRODUCTS_PER_PAGE;
+
+// ── جلب المنتجات من DB (مع LIMIT/OFFSET) ────────────────────
+$stmt = $pdo->prepare("
+    SELECT p.*, GROUP_CONCAT(DISTINCT c.name ORDER BY c.name) AS categories,
+           COALESCE(p.is_visible, 1) AS is_visible
     FROM products p
     LEFT JOIN product_category_pivot pcp ON pcp.product_id = p.id
     LEFT JOIN categories c ON c.id = pcp.category_id
     GROUP BY p.id
+    HAVING is_visible = 1
     ORDER BY p.date_added DESC, p.id DESC
-")->fetchAll();
+    LIMIT ? OFFSET ?
+");
+$stmt->execute([PRODUCTS_PER_PAGE, $offset]);
+$products = $stmt->fetchAll();
 
 $csrf = generateCsrfToken();
 
@@ -45,7 +61,7 @@ function getTag(array $p): string {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -204,8 +220,6 @@ function getTag(array $p): string {
                         <span class="badge bg-danger mb-1">Out of Stock</span>
                         <?php elseif ($stock <= 5): ?>
                         <span class="badge bg-warning text-dark mb-1">Limited (<?= $stock ?> left)</span>
-                        <?php else: ?>
-                        <span class="badge bg-success mb-1">In Stock</span>
                         <?php endif; ?>
 
                         <div class="price-box mt-1">
@@ -228,10 +242,19 @@ function getTag(array $p): string {
                                     onclick="changeQtyDB('<?= $p['id'] ?>',1)">+</button>
                         </div>
                         <?php if ($stock > 0): ?>
+                        <?php if (isUser()): ?>
                         <button class="btn btn-success w-100"
                                 onclick="addToCartDB(<?= $p['id'] ?>, <?= $finalPrice ?>, <?= $stock ?>)">
                             🛒 Add to Cart
                         </button>
+                        <?php else: ?>
+                        <button class="btn btn-success w-100 btn-disabled-faded"
+                                disabled
+                                data-bs-toggle="modal" data-bs-target="#loginModal"
+                                onclick="this.removeAttribute('disabled')">
+                            🛒 Add to Cart
+                        </button>
+                        <?php endif; ?>
                         <?php else: ?>
                         <?php if (isUser()): ?>
                         <form method="POST" action="/Task(1)/handlers/notify_handler.php">
@@ -261,6 +284,31 @@ function getTag(array $p): string {
         <?php endif; ?>
 
     </div>
+
+    <?php if ($totalPages > 1): ?>
+    <!-- ── Pagination ──────────────────────────────────── -->
+    <nav aria-label="Products pagination" class="mt-4 d-flex justify-content-center">
+        <ul class="pagination">
+            <?php
+            // نحافظ على باقي query params
+            $baseQuery = array_diff_key($_GET, ['page' => '']);
+            $buildUrl  = fn(int $p) => '?' . http_build_query(array_merge($baseQuery, ['page' => $p]));
+            ?>
+            <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                <a class="page-link" href="<?= htmlspecialchars($buildUrl($currentPage - 1)) ?>">‹ Prev</a>
+            </li>
+            <?php for ($p = max(1, $currentPage - 2); $p <= min($totalPages, $currentPage + 2); $p++): ?>
+            <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
+                <a class="page-link" href="<?= htmlspecialchars($buildUrl($p)) ?>"><?= $p ?></a>
+            </li>
+            <?php endfor; ?>
+            <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                <a class="page-link" href="<?= htmlspecialchars($buildUrl($currentPage + 1)) ?>">Next ›</a>
+            </li>
+        </ul>
+    </nav>
+    <?php endif; ?>
+
 </section>
 </main>
 

@@ -8,27 +8,51 @@ require_once __DIR__ . '/config/db.php';
 
 $pdo = getDB();
 
+// ── جلب كل المنتجات المرئية مرتبة تنازلياً بـ sales_count ──────
 $products = $pdo->query("
     SELECT p.id, p.name, p.price, p.discount_percentage, p.price_after_discount,
            p.image_path, p.date_added, p.sales_count, p.stock_quantity, p.description,
-           p.manufacturer, GROUP_CONCAT(DISTINCT c.name) AS categories
+           p.manufacturer, GROUP_CONCAT(DISTINCT c.name) AS categories,
+           COALESCE(p.is_visible, 1) AS is_visible
     FROM products p
     LEFT JOIN product_category_pivot pcp ON pcp.product_id = p.id
     LEFT JOIN categories c ON c.id = pcp.category_id
     GROUP BY p.id
-    ORDER BY p.date_added DESC, p.id DESC
+    HAVING is_visible = 1
+    ORDER BY p.sales_count DESC, p.id ASC
 ")->fetchAll();
 
-// تحويل لـ format يناسب JS (يحاكي products.json القديم)
-function getProductTag(array $p): string {
-    if ((int)$p['sales_count'] >= 5) return 'best-seller';
-    $days = (time() - strtotime($p['date_added'] ?? 'now')) / 86400;
-    if ($days <= 60) return 'new';
+// ── تحديد أعلى 7 بالمبيعات → best-seller ──────────────────────
+$bestSellerIds = array_slice(
+    array_column($products, 'id'),
+    0,
+    7
+);
+
+// ── تحديد أحدث 7 بتاريخ الإضافة → new (مستثنيًا Best Sellers) ──
+$productsSortedByDate = $products;
+usort($productsSortedByDate, function($a, $b) {
+    return strtotime($b['date_added'] ?? '2000-01-01') - strtotime($a['date_added'] ?? '2000-01-01');
+});
+// نستثني المنتجات اللي أخذت تاغ best-seller حتى لا تختفي من قسم New
+$newArrivalIds = array_slice(
+    array_values(array_filter(
+        array_column($productsSortedByDate, 'id'),
+        fn($id) => !in_array($id, $bestSellerIds)
+    )),
+    0,
+    7
+);
+
+// ── دالة تحديد التاغ ────────────────────────────────────────────
+function getProductTag(array $p, array $bestSellerIds, array $newArrivalIds): string {
+    if (in_array((int)$p['id'], $bestSellerIds)) return 'best-seller';
+    if (in_array((int)$p['id'], $newArrivalIds)) return 'new';
     if ((int)$p['stock_quantity'] > 0 && (int)$p['stock_quantity'] <= 5) return 'limited';
     return 'regular';
 }
 
-$productsJS = array_values(array_map(function($p) {
+$productsJS = array_values(array_map(function($p) use ($bestSellerIds, $newArrivalIds) {
     $finalPrice = (float)($p['discount_percentage'] > 0 ? $p['price_after_discount'] : $p['price']);
     return [
         'id'          => (int)$p['id'],
@@ -38,7 +62,7 @@ $productsJS = array_values(array_map(function($p) {
         'image_path'  => $p['image_path'] ?? '',
         'description' => $p['description'] ?? '',
         'brand'       => $p['manufacturer'] ?? '',
-        'tag'         => getProductTag($p),
+        'tag'         => getProductTag($p, $bestSellerIds, $newArrivalIds),
         'discount_percentage' => (float)$p['discount_percentage'],
         'stock_quantity'      => (int)$p['stock_quantity'],
         'categories'  => $p['categories'] ?? '',
@@ -46,7 +70,7 @@ $productsJS = array_values(array_map(function($p) {
 }, $products));
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

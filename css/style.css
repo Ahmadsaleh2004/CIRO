@@ -28,6 +28,13 @@
     --card-radius:       14px;
     --img-height:        180px;
     --card-height:       320px;
+    --disabled-opacity:  0.45;
+    --dur-fast:          150ms;
+    --dur-base:          250ms;
+    --dur-slow:          400ms;
+    --ease-standard:     cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce:       cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-decelerate:   cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body.dark-mode {
@@ -57,6 +64,21 @@ body.dark-mode {
 }
 
 /* ==================================================
+   نظام الأزرار المعطلة الموحد (Disabled Button Design System)
+   ================================================== */
+.btn-disabled-faded, 
+.btn-disabled-faded:hover, 
+.btn-disabled-faded:focus, 
+.btn-disabled-faded:active {
+    opacity: var(--disabled-opacity) !important;
+    filter: saturate(0.6) !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* ==================================================
    Fix Bootstrap padding-right on body (modal/offcanvas)
    ================================================== */
 body {
@@ -65,7 +87,7 @@ body {
     min-height: 100vh;
     background-color: var(--bg-color);
     color: var(--text-color);
-    transition: background-color 0.35s ease, color 0.35s ease;
+    transition: background-color var(--dur-slow) ease, color var(--dur-slow) ease;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -89,7 +111,7 @@ body {
    ================================================== */
 .custom-navbar {
     background-color: var(--navbar-bg) !important;
-    transition: background-color 0.35s ease;
+    transition: background-color var(--dur-slow) ease;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
@@ -97,7 +119,7 @@ body {
 .custom-navbar .nav-link,
 .custom-navbar .nav-link:visited {
     color: var(--navbar-text) !important;
-    transition: color 0.2s ease, opacity 0.2s ease;
+    transition: color var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .custom-navbar .nav-link:hover {
@@ -125,7 +147,7 @@ body {
 .custom-footer {
     background-color: var(--footer-bg) !important;
     color: var(--footer-text) !important;
-    transition: background-color 0.35s ease, color 0.35s ease;
+    transition: background-color var(--dur-slow) ease, color var(--dur-slow) ease;
 }
 
 .custom-footer p,
@@ -139,7 +161,7 @@ body {
 .custom-footer a {
     color: var(--footer-link) !important;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color var(--dur-fast) ease;
 }
 
 .custom-footer a:hover {
@@ -159,7 +181,7 @@ body {
     color: var(--modal-text) !important;
     border: 1px solid var(--modal-border) !important;
     border-radius: 16px !important;
-    transition: background-color 0.35s ease, color 0.35s ease;
+    transition: background-color var(--dur-slow) ease, color var(--dur-slow) ease;
 }
 
 .modal-header {
@@ -202,7 +224,7 @@ select,
     background-color: var(--input-bg) !important;
     color: var(--input-text) !important;
     border: 1px solid var(--input-border) !important;
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    transition: background-color var(--dur-slow) ease, border-color var(--dur-slow) ease, color var(--dur-slow) ease;
 }
 
 input::placeholder,
@@ -258,9 +280,9 @@ select:-webkit-autofill:focus {
     border-radius: var(--card-radius) !important;
     box-shadow: 0 2px 8px var(--shadow-color);
     overflow: hidden;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                background-color 0.35s ease !important;
+    transition: transform var(--dur-fast) var(--ease-decelerate),
+                box-shadow var(--dur-fast) var(--ease-decelerate),
+                background-color var(--dur-slow) ease !important;
     display: flex;
     flex-direction: column;
     height: var(--card-height);
@@ -288,7 +310,7 @@ select:-webkit-autofill:focus {
     overflow: hidden;
     background-color: var(--bg-color);
     padding: 12px;
-    transition: background-color 0.35s ease;
+    transition: background-color var(--dur-slow) ease;
     flex-shrink: 0;
 }
 
@@ -298,7 +320,7 @@ select:-webkit-autofill:focus {
     width: auto;
     height: auto;
     object-fit: contain;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform var(--dur-slow) var(--ease-standard);
     display: block;
 }
 
@@ -315,7 +337,7 @@ select:-webkit-autofill:focus {
     flex-direction: column;
     justify-content: space-between;
     padding: 12px 14px 14px;
-    transition: background-color 0.35s ease;
+    transition: background-color var(--dur-slow) ease;
 }
 
 .product-card .card-body h5,
@@ -351,8 +373,8 @@ select:-webkit-autofill:focus {
     background-color: var(--card-bg);
     border: 1px solid var(--section-border);
     box-shadow: 0 2px 8px var(--shadow-color);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform var(--dur-fast) var(--ease-decelerate),
+                box-shadow var(--dur-fast) var(--ease-decelerate);
     text-decoration: none !important;
 }
 
@@ -371,8 +393,8 @@ select:-webkit-autofill:focus {
     object-fit: contain;
     padding: 20px;
     background-color: var(--bg-color);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                background-color 0.35s ease;
+    transition: transform var(--dur-slow) var(--ease-standard),
+                background-color var(--dur-slow) ease;
 }
 
 .image-only-product:hover .img-fill {
@@ -414,8 +436,8 @@ select:-webkit-autofill:focus {
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px var(--shadow-color);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.25s ease;
+    transition: transform var(--dur-base) var(--ease-standard),
+                box-shadow var(--dur-base) ease;
 }
 
 .favorite-btn:hover {
@@ -448,10 +470,10 @@ select:-webkit-autofill:focus {
    Buttons — Global Unified (Green)
    ================================================== */
 .btn {
-    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.2s ease,
-                background 0.25s ease,
-                opacity 0.2s ease !important;
+    transition: transform var(--dur-base) var(--ease-bounce),
+                box-shadow var(--dur-fast) ease,
+                background var(--dur-base) ease,
+                opacity var(--dur-fast) ease !important;
     border-radius: 10px !important;
     font-weight: 600 !important;
     letter-spacing: 0.3px;
@@ -489,6 +511,93 @@ select:-webkit-autofill:focus {
     border: none !important;
     color: #ffffff !important;
     box-shadow: 0 3px 12px rgba(37, 99, 235, 0.30) !important;
+}
+
+/* --- Auth Modals: تثبيت لون الـ inputs عند الـ focus --- */
+#loginModal    .float-group input:focus,
+#registerModal .float-group input:focus,
+#registerModal .float-group textarea:focus,
+#registerModal .float-group select:focus,
+#forgotModal   .float-group input:focus,
+#loginModal    .modal-body input:focus,
+#loginModal    .modal-body .form-control:focus,
+#forgotModal   .modal-body input:focus,
+#forgotModal   .modal-body .form-control:focus {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    caret-color: var(--input-text) !important;
+    -webkit-text-fill-color: var(--input-text) !important;
+}
+
+/* --- إلغاء autofill المتصفح الأبيض داخل الـ Modals --- */
+#loginModal    input:-webkit-autofill,
+#loginModal    input:-webkit-autofill:focus,
+#registerModal input:-webkit-autofill,
+#registerModal input:-webkit-autofill:focus,
+#forgotModal   input:-webkit-autofill,
+#forgotModal   input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+    -webkit-text-fill-color: var(--input-text) !important;
+    caret-color: var(--input-text) !important;
+}
+
+/* dark mode: قيم ثابتة لأن webkit لا يقرأ CSS vars داخل inset shadow */
+body.dark-mode #loginModal    input,
+body.dark-mode #loginModal    input:focus,
+body.dark-mode #registerModal input,
+body.dark-mode #registerModal input:focus,
+body.dark-mode #registerModal select,
+body.dark-mode #registerModal select:focus,
+body.dark-mode #forgotModal   input,
+body.dark-mode #forgotModal   input:focus {
+    background-color: #21262d !important;
+    color:            #e6edf3 !important;
+    caret-color:      #e6edf3 !important;
+    -webkit-text-fill-color: #e6edf3 !important;
+    border-color: #30363d !important;
+}
+
+body.dark-mode #loginModal    input:-webkit-autofill,
+body.dark-mode #loginModal    input:-webkit-autofill:focus,
+body.dark-mode #registerModal input:-webkit-autofill,
+body.dark-mode #registerModal input:-webkit-autofill:focus,
+body.dark-mode #forgotModal   input:-webkit-autofill,
+body.dark-mode #forgotModal   input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #21262d inset !important;
+    -webkit-text-fill-color: #e6edf3 !important;
+    caret-color: #e6edf3 !important;
+}
+
+/* ==================================================
+   Dark Mode — إصلاح شامل لكل الحقول بالموقع
+   (تغطية عامة لأي حقل خارج الـ Auth Modals الثلاثة)
+   WebKit لا يقرأ CSS Variables داخل inset box-shadow
+   ================================================== */
+body.dark-mode input,
+body.dark-mode input:focus,
+body.dark-mode textarea,
+body.dark-mode textarea:focus,
+body.dark-mode select,
+body.dark-mode select:focus,
+body.dark-mode .form-control,
+body.dark-mode .form-control:focus {
+    background-color: #21262d !important;
+    color:            #e6edf3 !important;
+    caret-color:      #e6edf3 !important;
+    -webkit-text-fill-color: #e6edf3 !important;
+    border-color: #30363d !important;
+}
+
+body.dark-mode input:-webkit-autofill,
+body.dark-mode input:-webkit-autofill:hover,
+body.dark-mode input:-webkit-autofill:focus,
+body.dark-mode textarea:-webkit-autofill,
+body.dark-mode textarea:-webkit-autofill:focus,
+body.dark-mode select:-webkit-autofill,
+body.dark-mode select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #21262d inset !important;
+    -webkit-text-fill-color: #e6edf3 !important;
+    caret-color: #e6edf3 !important;
 }
 
 #loginModal    .btn-dark:hover,
@@ -531,7 +640,7 @@ select:-webkit-autofill:focus {
     border: 1.5px solid var(--text-color) !important;
     color: var(--text-color) !important;
     box-shadow: none !important;
-    transition: all 0.2s ease !important;
+    transition: all var(--dur-fast) ease !important;
 }
 
 .cat-btn:hover,
@@ -557,8 +666,8 @@ select:-webkit-autofill:focus {
     border-color: var(--navbar-text) !important;
     color: var(--navbar-text) !important;
     box-shadow: none !important;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.2s ease !important;
+    transition: transform var(--dur-slow) var(--ease-bounce),
+                box-shadow var(--dur-fast) ease !important;
 }
 
 #theme-toggle:hover {
@@ -590,7 +699,7 @@ select:-webkit-autofill:focus {
     color: var(--input-text) !important;
     font-size: 0.95rem;
     outline: none;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+    transition: border-color var(--dur-base) ease, box-shadow var(--dur-base) ease !important;
 }
 
 .float-group textarea {
@@ -607,10 +716,10 @@ select:-webkit-autofill:focus {
     color: var(--placeholder-color) !important;
     font-size: 0.95rem;
     pointer-events: none;
-    transition: top 0.22s cubic-bezier(0.34,1.2,0.64,1),
-                font-size 0.22s ease,
-                color 0.22s ease,
-                transform 0.22s ease;
+    transition: top var(--dur-base) cubic-bezier(0.34,1.2,0.64,1),
+                font-size var(--dur-base) ease,
+                color var(--dur-base) ease,
+                transform var(--dur-base) ease;
     background: transparent;
 }
 
@@ -638,8 +747,16 @@ select:-webkit-autofill:focus {
 .float-group input:focus,
 .float-group textarea:focus,
 .float-group select:focus {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
     border-color: var(--accent) !important;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* داخل input-group عند الفوكس كذلك */
+.float-group .input-group input:focus {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
 }
 
 /* input-group داخل float-group للـ password */
@@ -654,7 +771,7 @@ select:-webkit-autofill:focus {
     border-left: none !important;
     background-color: var(--input-bg) !important;
     color: var(--placeholder-color) !important;
-    transition: border-color 0.25s ease;
+    transition: border-color var(--dur-base) ease;
     cursor: pointer;
 }
 
@@ -678,11 +795,15 @@ select:-webkit-autofill:focus {
 }
 
 .carousel-item img {
-    transition: 0.4s;
+    transition: transform var(--dur-slow);
 }
 
 .carousel-item img:hover {
-    transform: scale(1.03);
+    transform: scale(1.015);
+}
+
+.carousel-item {
+    overflow: hidden;
 }
 
 .text-shadow {
@@ -734,7 +855,7 @@ select:-webkit-autofill:focus {
     line-height: 1;
     border: 1px solid var(--navbar-bg);
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: 0.3s;
+    transition: var(--dur-slow);
 }
 
 /* ==================================================
@@ -770,7 +891,7 @@ select:-webkit-autofill:focus {
     border: 1px solid var(--section-border) !important;
     color: var(--text-color) !important;
     border-radius: 10px !important;
-    transition: background-color 0.35s ease;
+    transition: background-color var(--dur-slow) ease;
 }
 
 .spec-label {
@@ -811,7 +932,7 @@ select:-webkit-autofill:focus {
     background-color: var(--card-bg) !important;
     color: var(--text-color) !important;
     border: 1px solid var(--section-border) !important;
-    transition: background-color 0.35s ease, color 0.35s ease;
+    transition: background-color var(--dur-slow) ease, color var(--dur-slow) ease;
 }
 
 .card h3, .card h4, .card h5, .card p, .card label, .card strong {
@@ -841,7 +962,7 @@ select:-webkit-autofill:focus {
     font-weight: 600;
     font-size: 0.9rem;
     z-index: 9999;
-    transition: top 0.2s ease;
+    transition: top var(--dur-fast) ease;
     text-decoration: none !important;
 }
 
@@ -860,7 +981,7 @@ select:-webkit-autofill:focus {
 }
 
 main[role="main"] {
-    animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: pageEnter var(--dur-base) var(--ease-decelerate) both;
 }
 
 /* Overlay — يغطي الشاشة عند الخروج */
@@ -871,7 +992,7 @@ main[role="main"] {
     z-index: 1040;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity var(--dur-fast) var(--ease-decelerate);
 }
 
 #page-overlay.active {
@@ -902,7 +1023,7 @@ main[role="main"] {
 }
 
 #page-progress-bar.loading {
-    animation: progressBar 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    animation: progressBar var(--dur-slow) cubic-bezier(0.4, 0, 0.6, 1) forwards;
 }
 
 /* Page exit — navbar يبقى ثابت */
@@ -927,6 +1048,10 @@ body.page-exit .custom-navbar {
     .favorite-btn { transition: none !important; }
     #theme-toggle { transition: none !important; }
     .section-carousel-btn { transition: none !important; }
+    .cart-bounce { animation: none !important; }
+    .modal.show .modal-dialog, .modal.fade .modal-dialog, .modal-dialog { animation: none !important; transition: none !important; transform: none !important; }
+    .toast, .toast.show, .toast.fade { animation: none !important; transition: none !important; }
+    .skeleton, .skeleton-card, .skeleton-img, .skeleton-line { animation: none !important; }
 }
 
 /* ==================================================
@@ -1234,7 +1359,7 @@ body.dark-mode .alert-danger {
     object-fit: cover !important;
     border-top-left-radius: inherit;
     border-top-right-radius: inherit;
-    transition: transform 0.4s ease;
+    transition: transform var(--dur-slow) ease;
 }
 
 /* ==================================================
@@ -1251,7 +1376,7 @@ body.dark-mode .alert-danger {
         var(--bg-color)       50%,
         var(--section-border) 75%);
     background-size: 600px 100%;
-    animation: shimmer 1.4s infinite linear;
+    animation: shimmer 1var(--dur-slow) infinite linear;
     border-radius: 10px;
 }
 
@@ -1268,55 +1393,60 @@ body.dark-mode .alert-danger {
 .skeleton-line.short { width: 50%; }
 
 /* ==================================================
-   Scroll Fade-in Animations
+   Unified Slide/Fade Animation (fadeSlideIn)
    ================================================== */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(28px); }
-    to   { opacity: 1; transform: translateY(0); }
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(var(--slide-x, 0), var(--slide-y, 0)) scale(var(--slide-scale, 1));
+    }
+    to {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
 }
 
 .fade-in-up {
-    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    --slide-y: 28px;
+    animation: fadeSlideIn var(--dur-slow) var(--ease-decelerate) both;
 }
 
 .reveal {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.55s cubic-bezier(0.22,1,0.36,1),
-                transform 0.55s cubic-bezier(0.22,1,0.36,1);
+    --slide-y: 28px;
+    transform: translate(0, var(--slide-y)) scale(1);
+    transition: opacity var(--dur-slow) var(--ease-decelerate),
+                transform var(--dur-slow) var(--ease-decelerate);
 }
 
 .reveal.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(0, 0) scale(1);
 }
 
 /* stagger delay for cards */
-.reveal:nth-child(2) { transition-delay: 0.08s; }
-.reveal:nth-child(3) { transition-delay: 0.16s; }
-.reveal:nth-child(4) { transition-delay: 0.24s; }
+.reveal:nth-child(2) { transition-delay: var(--dur-fast); }
+.reveal:nth-child(3) { transition-delay: var(--dur-fast); }
+.reveal:nth-child(4) { transition-delay: var(--dur-base); }
 
 /* ==================================================
    Product Cards — Entrance Animation (Products Page)
    ================================================== */
-@keyframes cardFadeIn {
-    from { opacity: 0; transform: translateY(16px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 #products-container .product-card {
-    animation: cardFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    --slide-y: 16px;
+    --slide-scale: 0.97;
+    animation: fadeSlideIn var(--dur-slow) var(--ease-decelerate) both;
 }
 
-#products-container .product-card:nth-child(1) { animation-delay: 0.0s; }
-#products-container .product-card:nth-child(2) { animation-delay: 0.04s; }
-#products-container .product-card:nth-child(3) { animation-delay: 0.08s; }
-#products-container .product-card:nth-child(4) { animation-delay: 0.12s; }
-#products-container .product-card:nth-child(5) { animation-delay: 0.16s; }
-#products-container .product-card:nth-child(6) { animation-delay: 0.20s; }
-#products-container .product-card:nth-child(7) { animation-delay: 0.24s; }
-#products-container .product-card:nth-child(8) { animation-delay: 0.28s; }
-#products-container .product-card:nth-child(9) { animation-delay: 0.32s; }
+#products-container .product-card:nth-child(1) { animation-delay: var(--dur-fast); }
+#products-container .product-card:nth-child(2) { animation-delay: var(--dur-fast); }
+#products-container .product-card:nth-child(3) { animation-delay: var(--dur-fast); }
+#products-container .product-card:nth-child(4) { animation-delay: var(--dur-fast); }
+#products-container .product-card:nth-child(5) { animation-delay: var(--dur-fast); }
+#products-container .product-card:nth-child(6) { animation-delay: var(--dur-fast); }
+#products-container .product-card:nth-child(7) { animation-delay: var(--dur-base); }
+#products-container .product-card:nth-child(8) { animation-delay: var(--dur-base); }
+#products-container .product-card:nth-child(9) { animation-delay: var(--dur-slow); }
 
 /* ==================================================
    Back to Top Button
@@ -1336,7 +1466,7 @@ body.dark-mode .alert-danger {
     z-index: 999;
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease !important;
+    transition: opacity var(--dur-slow) ease, transform var(--dur-slow) ease !important;
     pointer-events: none;
     display: flex;
     align-items: center;
@@ -1366,7 +1496,7 @@ body.dark-mode .alert-danger {
 .store-breadcrumb a {
     color: var(--placeholder-color) !important;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color var(--dur-fast);
 }
 
 .store-breadcrumb a:hover { color: var(--accent) !important; }
@@ -1400,7 +1530,7 @@ body.dark-mode .alert-danger {
     font-weight: 600;
     color: var(--accent) !important;
     text-decoration: none;
-    transition: color 0.2s, gap 0.2s;
+    transition: color var(--dur-fast), gap var(--dur-fast);
 }
 
 .section-view-all:hover {
@@ -1425,7 +1555,7 @@ body.dark-mode .alert-danger {
 }
 
 .modal.show .modal-dialog {
-    animation: modalSlideIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: modalSlideIn var(--dur-slow) var(--ease-bounce);
 }
 
 .modal-content {
@@ -1523,9 +1653,9 @@ body.dark-mode .alert-danger {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s ease,
-                transform 0.25s cubic-bezier(0.34,1.56,0.64,1),
-                box-shadow 0.2s ease !important;
+    transition: background var(--dur-fast) ease,
+                transform var(--dur-base) cubic-bezier(0.34,1.56,0.64,1),
+                box-shadow var(--dur-fast) ease !important;
     padding: 0 !important;
 }
 
@@ -1579,8 +1709,8 @@ body.dark-mode .alert-danger {
     background-color: var(--card-bg);
     border: 1px solid var(--section-border);
     box-shadow: 0 2px 8px var(--shadow-color);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform var(--dur-fast) var(--ease-decelerate),
+                box-shadow var(--dur-fast) var(--ease-decelerate);
     text-decoration: none !important;
     display: block;
     height: var(--card-height);
@@ -1601,8 +1731,8 @@ body.dark-mode .alert-danger {
     object-fit: contain;
     padding: 16px;
     background-color: var(--bg-color);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                background-color 0.35s ease;
+    transition: transform var(--dur-slow) var(--ease-standard),
+                background-color var(--dur-slow) ease;
 }
 
 .home-product-card:hover .hpc-img {
@@ -1612,7 +1742,7 @@ body.dark-mode .alert-danger {
 .home-product-card .hpc-body {
     padding: 10px 14px 12px;
     background-color: var(--card-bg);
-    transition: background-color 0.35s ease;
+    transition: background-color var(--dur-slow) ease;
 }
 
 .home-product-card .hpc-name {
@@ -1650,16 +1780,13 @@ body.dark-mode .alert-danger {
 .hpc-tag-regular{ background: #64748b; color: #fff; }
 
 /* ── Step-by-Step Checkout Transitions ── */
-@keyframes stepEnter {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
-}
 .checkout-step {
     display: none;
 }
 .checkout-step.active {
     display: block !important;
-    animation: stepEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    --slide-x: 20px;
+    animation: fadeSlideIn var(--dur-base) var(--ease-decelerate) both;
 }
 
 /* ── My Info Tabs Transitions ── */
@@ -1667,7 +1794,7 @@ body.dark-mode .alert-danger {
     display: none;
     opacity: 0;
     transform: translateY(10px);
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity var(--dur-base) var(--ease-decelerate), transform var(--dur-base) var(--ease-decelerate);
 }
 .tab-section.active-tab {
     display: block !important;
@@ -1679,7 +1806,7 @@ body.dark-mode .alert-danger {
 .dropdown-menu {
     opacity: 0;
     transform: translateY(8px) scale(0.98);
-    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: opacity var(--dur-fast) var(--ease-decelerate), transform var(--dur-fast) var(--ease-decelerate) !important;
     display: block !important;
     pointer-events: none;
     visibility: hidden;
@@ -1693,10 +1820,10 @@ body.dark-mode .alert-danger {
 
 /* ── SweetAlert2 Toast Custom Animations ── */
 .swal2-toast-show {
-    animation: toastFadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    animation: toastFadeInDown var(--dur-slow) var(--ease-decelerate) forwards !important;
 }
 .swal2-toast-hide {
-    animation: toastFadeOutUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    animation: toastFadeOutUp var(--dur-base) var(--ease-decelerate) forwards !important;
 }
 @keyframes toastFadeInDown {
     from { opacity: 0; transform: translateY(-12px); }
@@ -1712,7 +1839,7 @@ body.dark-mode .alert-danger {
 .favorite-btn:active,
 .info-tab-btn:active {
     transform: scale(0.97) !important;
-    transition: transform 0.1s ease !important;
+    transition: transform var(--dur-fast) ease !important;
 }
 
 /* ── WCAG AA Color Contrast Overrides ── */
@@ -1737,5 +1864,115 @@ body.dark-mode .alert-danger {
     60%      { transform: scale(0.92); }
 }
 .cart-bounce {
-    animation: cartBounce 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: cartBounce var(--dur-slow) var(--ease-decelerate) both;
 }
+
+/* ==================================================
+   Notification System Styles (Phase 15)
+   ================================================== */
+#notifSidebar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 350px;
+    height: 100%;
+    background-color: var(--card-bg);
+    border-left: 1px solid var(--section-border);
+    box-shadow: -4px 0 16px var(--shadow-color);
+    z-index: 1060;
+    display: flex;
+    flex-direction: column;
+    transition: right var(--dur-base) var(--ease-standard);
+}
+#notifSidebar.open {
+    right: 0;
+}
+.notif-header {
+    padding: 16px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--section-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.notif-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.notif-item {
+    padding: 16px;
+    padding-right: 32px; /* مساحة لزر X */
+    border-bottom: 1px solid var(--section-border);
+    cursor: pointer;
+    position: relative;
+    transition: background-color var(--dur-fast) ease;
+    color: var(--text-color);
+}
+
+/* ── زر X لحذف إشعار واحد ── */
+.notif-dismiss-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--placeholder-color);
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: color var(--dur-fast) ease, background var(--dur-fast) ease;
+    z-index: 2;
+}
+.notif-dismiss-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+.notif-item:hover {
+    background-color: var(--bg-color);
+}
+.notif-item.unread {
+    background-color: rgba(99, 102, 241, 0.05); /* Light indigo highlight */
+}
+.notif-item.unread .notif-title {
+    font-weight: 700;
+}
+.notif-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+.notif-msg {
+    font-size: 0.85rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+.notif-time {
+    font-size: 0.75rem;
+    color: var(--placeholder-color);
+}
+.notif-dot {
+    position: absolute;
+    top: 20px;
+    left: 16px; /* Place on the left in RTL/LTR layout suitably */
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+}
+.notif-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--placeholder-color);
+    font-size: 0.9rem;
+}
+

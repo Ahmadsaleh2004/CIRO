@@ -108,13 +108,17 @@ $prefillEmail = $_SESSION['user_email'] ?? '';
 
                         <div class="float-group">
                             <input type="email" id="loginEmail" name="email"
-                                   placeholder=" " required autocomplete="email">
+                                   class="form-control"
+                                   placeholder=" " required autocomplete="email"
+                                   style="background-color:var(--input-bg);color:var(--input-text);">
                             <label>Email Address</label>
                         </div>
                         <div class="float-group mb-1">
                             <div class="input-group">
                                 <input type="password" id="loginPass" name="password"
-                                       placeholder=" " required autocomplete="current-password">
+                                       class="form-control"
+                                       placeholder=" " required autocomplete="current-password"
+                                       style="background-color:var(--input-bg);color:var(--input-text);">
                                 <span class="input-group-text"
                                       onclick="togglePassword('loginPass','eyeLogin')"
                                       id="eyeLogin" style="cursor:pointer;">👁️</span>
@@ -232,6 +236,9 @@ $prefillEmail = $_SESSION['user_email'] ?? '';
                                     <input type="date" name="birth_date" id="regBirthDate" placeholder=" ">
                                     <label>Birth Date</label>
                                 </div>
+                                <small class="text-muted d-block mt-n2 mb-2" style="font-size:0.75rem;padding-left:4px;">
+                                    Must be 13 years or older
+                                </small>
                             </div>
                         </div>
 
@@ -297,11 +304,12 @@ $prefillEmail = $_SESSION['user_email'] ?? '';
                         <input type="hidden" name="action" value="forgot">
                         <div class="float-group">
                             <input type="email" name="email" id="forgotEmail"
+                                   class="form-control"
                                    placeholder=" " required autocomplete="email">
                             <label>Email Address</label>
                         </div>
                         <div id="forgotMsg" class="alert py-2 small mb-3" style="display:none;"></div>
-                        <button type="submit" class="btn btn-warning w-100 mb-3 py-2">Send Reset Link</button>
+                        <button type="submit" id="forgotBtn" class="btn btn-warning w-100 mb-3 py-2">Send Reset Link</button>
                         <div class="modal-divider">or</div>
                         <p class="text-center small mb-0">
                             <a href="#" class="fw-bold"
@@ -317,31 +325,105 @@ $prefillEmail = $_SESSION['user_email'] ?? '';
     <!-- ══ Privacy Policy Modal ════════════════════════════════ -->
     <div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">🔒 Privacy Policy</h5>
+            <div class="modal-content" style="background:var(--card-bg); color:var(--text-color); border:1px solid var(--section-border);">
+                <div class="modal-header" style="border-bottom:1px solid var(--section-border);">
+                    <h5 class="modal-title">🔒 Privacy Policy / سياسة الخصوصية</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="max-height:60vh;overflow-y:auto;">
-                    <p><?= nl2br(htmlspecialchars($privacyPolicy)) ?></p>
+                    <h3>🔒 Privacy Policy / سياسة الخصوصية</h3>
+                    <hr style="border-color:var(--section-border);">
+                    <h5>1. Information We Collect / البيانات التي نجمعها</h5>
+                    <p>We collect personal information that you provide to us directly, such as your full name, email address, password, phone number, birth date, gender, country, and city when registering an account or communicating with us.</p>
+                    <p>نقوم بجمع المعلومات الشخصية التي تقدمها لنا مباشرة، مثل الاسم الكامل، عنوان البريد الإلكتروني، كلمة المرور، رقم الهاتف، تاريخ الميلاد، الجنس، الدولة، والمدينة عند إنشاء حساب أو التواصل معنا.</p>
+
+                    <h5>2. How We Use Your Information / كيف نستخدم بياناتك</h5>
+                    <p>We use your information to facilitate your purchases, process and deliver your orders, communicate order updates, improve our services, prevent fraudulent activities, and comply with legal obligations.</p>
+                    <p>نستخدم بياناتك لتسهيل عمليات الشراء، ومعالجة طلباتك وتوصيلها، وإعلامك بآخر التحديثات حول طلباتك، وتحسين خدماتنا، ومنع الأنشطة الاحتيالية، والالتزام بالقوانين المعمول بها.</p>
+
+                    <h5>3. Data Storage & Protection / تخزين وحماية البيانات</h5>
+                    <p>All passwords are encrypted using high-security hashing algorithms (BCRYPT). We implement strict security measures to protect your personal data from unauthorized access, alteration, or disclosure.</p>
+                    <p>تُشفر جميع كلمات المرور باستخدام خوارزميات تشفير عالية الأمان (BCRYPT). نتخذ تدابير أمنية صارمة لحماية بياناتك الشخصية من الوصول غير المصرح به، أو التعديل، أو الإفصاح.</p>
+
+                    <h5>4. Cookies / ملفات تعريف الارتباط</h5>
+                    <p>We use cookies to maintain your login session and store your preferences. You can configure your browser to reject cookies, but some features of the website may not function correctly.</p>
+                    <p>نستخدم ملفات تعريف الارتباط للحفاظ على جلسة تسجيل الدخول وتخزين تفضيلاتك. يمكنك ضبط متصفحك لرفض ملفات تعريف الارتباط، ولكن قد لا تعمل بعض ميزات الموقع بشكل صحيح.</p>
+
+                    <h5>5. Your Rights / حقوقك كـ مستخدم</h5>
+                    <p>You have the right to access, update, or delete your personal information at any time via your 'My Info' page, or by contacting our support team.</p>
+                    <p>لديك الحق في الوصول إلى معلوماتك الشخصية، أو تحديثها، أو حذفها في أي وقت من خلال صفحة 'بياناتي' أو بالتواصل مع فريق الدعم لدينا.</p>
+
+                    <h5>6. Contact Us / اتصل بنا</h5>
+                    <p>If you have any questions or concerns regarding this Privacy Policy, you can reach out via the 'Contact Us' page.</p>
+                    <p>إذا كان لديك أي أسئلة أو مخاوف بشأن سياسة الخصوصية هذه، يمكنك التواصل معنا عبر صفحة 'اتصل بنا'.</p>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="border-top:1px solid var(--section-border);">
                     <button type="button" class="btn btn-success"
-                        onclick="document.getElementById('privacyCheck').checked=true;"
+                        onclick="document.getElementById('privacyCheck').checked=true; if(typeof checkSignupFormValidity === 'function') checkSignupFormValidity();"
                         data-bs-toggle="modal" data-bs-target="#registerModal"
-                        data-bs-dismiss="modal">✅ I Agree</button>
+                        data-bs-dismiss="modal">✅ I Agree / موافق</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ══ Notification Sidebar ════════════════════════════════ -->
+    <div id="notifSidebar" role="region" aria-label="Notifications panel">
+        <div class="notif-header">
+            <span>🔔 Notifications</span>
+            <div class="d-flex gap-2">
+                <button id="notifMarkAll" class="btn btn-sm btn-outline-light">Mark All Read</button>
+                <button id="notifClose" class="btn btn-sm btn-outline-light" aria-label="Close">✕</button>
+            </div>
+        </div>
+        <ul id="notifList" class="notif-list"><li class="notif-empty">Loading...</li></ul>
+        <div class="p-2">
+            <button id="notifDeleteAll" class="btn btn-sm btn-outline-danger w-100">🗑️ Delete All</button>
+        </div>
+    </div>
+
     <!-- ══ Scripts ═════════════════════════════════════════════ -->
+    <script>
+    // ── إصلاح لون الـ inputs في الـ dark mode عند الـ focus ──
+    (function fixInputFocus() {
+        function applyInputColors() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const bg     = isDark ? '#21262d' : '#ffffff';
+            const fg     = isDark ? '#e6edf3' : '#1a1a2e';
+            document.querySelectorAll(
+                '#loginModal input, #forgotModal input, #registerModal input, #registerModal select, #registerModal textarea'
+            ).forEach(el => {
+                el.style.setProperty('background-color', bg, 'important');
+                el.style.setProperty('color', fg, 'important');
+            });
+        }
+
+        // شغّل عند فتح أي Modal
+        document.addEventListener('shown.bs.modal', applyInputColors);
+        // شغّل عند تغيير الثيم
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) themeToggle.addEventListener('click', () => setTimeout(applyInputColors, 50));
+        // شغّل عند الـ focus مباشرة
+        document.addEventListener('focusin', function(e) {
+            const modal = e.target.closest('#loginModal, #forgotModal, #registerModal');
+            if (!modal) return;
+            const isDark = document.body.classList.contains('dark-mode');
+            const bg     = isDark ? '#21262d' : '#ffffff';
+            const fg     = isDark ? '#e6edf3' : '#1a1a2e';
+            e.target.style.setProperty('background-color', bg, 'important');
+            e.target.style.setProperty('color', fg, 'important');
+        });
+    })();
+    </script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/Task(1)/js/main.js"></script>
-    <script src="/Task(1)/js/helpers.js"></script>
-    <script src="/Task(1)/js/products.js"></script>
-    <script src="/Task(1)/js/auth.js"></script>
+    <script src="/Task(1)/js/main.js?v=<?= filemtime(__DIR__.'/../js/main.js') ?>"></script>
+    <script src="/Task(1)/js/helpers.js?v=<?= filemtime(__DIR__.'/../js/helpers.js') ?>"></script>
+    <script src="/Task(1)/js/products.js?v=<?= filemtime(__DIR__.'/../js/products.js') ?>"></script>
+    <script src="/Task(1)/js/auth.js?v=<?= filemtime(__DIR__.'/../js/auth.js') ?>"></script>
+    <?php if (isset($loggedInUser) && $loggedInUser): ?>
+    <script src="/Task(1)/js/notifications.js"></script>
+    <?php endif; ?>
     <?php if (isset($extraScripts)) echo $extraScripts; ?>
 </footer>

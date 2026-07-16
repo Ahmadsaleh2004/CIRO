@@ -25,19 +25,21 @@ if (isUser() && $_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['submit_revi
     $rating  = (int)($_POST['rating'] ?? 0);
     $comment = trim($_POST['comment'] ?? '');
     $uid     = getCurrentUserId();
-    if ($rating < 1 || $rating > 5) {
-        $reviewErr = 'يرجى اختيار تقييم من 1 إلى 5.';
+    if (empty($rating) && empty($comment)) {
+        $reviewErr = 'Please provide a rating or a comment.';
+    } elseif (!empty($rating) && ($rating < 1 || $rating > 5)) {
+        $reviewErr = 'Please select a rating from 1 to 5.';
     } else {
         $ex = $pdo->prepare("SELECT id FROM product_reviews WHERE product_id=? AND user_id=? LIMIT 1");
         $ex->execute([$pid, $uid]);
         if ($ex->fetch()) {
             $pdo->prepare("UPDATE product_reviews SET rating=?,comment=? WHERE product_id=? AND user_id=?")
-                ->execute([$rating, $comment?:null, $pid, $uid]);
-            $reviewMsg = '✅ تم تحديث تقييمك.';
+                ->execute([$rating ?: null, $comment?:null, $pid, $uid]);
+            $reviewMsg = '✅ Your review has been updated.';
         } else {
             $pdo->prepare("INSERT INTO product_reviews (product_id,user_id,rating,comment) VALUES (?,?,?,?)")
-                ->execute([$pid, $uid, $rating, $comment?:null]);
-            $reviewMsg = '✅ شكراً! تم إضافة تقييمك.';
+                ->execute([$pid, $uid, $rating ?: null, $comment?:null]);
+            $reviewMsg = '✅ Thank you! Your review has been added.';
         }
     }
 }
@@ -85,7 +87,7 @@ $csrf       = generateCsrfToken();
 $notified   = !empty($_GET['notified']);
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -186,8 +188,6 @@ $notified   = !empty($_GET['notified']);
             <div class="mb-3"><span class="badge bg-danger fs-6">Out of Stock</span></div>
             <?php elseif ($stock <= 5): ?>
             <div class="mb-3"><span class="badge bg-warning text-dark fs-6">⚠️ Only <?= $stock ?> left!</span></div>
-            <?php else: ?>
-            <div class="mb-3"><span class="badge bg-success fs-6">✅ In Stock</span></div>
             <?php endif; ?>
 
             <?php if ($stock > 0): ?>
@@ -199,14 +199,24 @@ $notified   = !empty($_GET['notified']);
                 <button class="btn btn-outline-secondary" id="plusBtn">+</button>
             </div>
             <div class="d-flex gap-2">
+                <?php if (isUser()): ?>
                 <button id="addCartBtn" class="btn btn-success btn-lg px-5">🛒 Add To Cart</button>
-                <button id="wishBtn"    class="btn btn-outline-danger btn-lg">🤍</button>
+                <?php else: ?>
+                <button id="addCartBtn"
+                        class="btn btn-success btn-lg px-5 btn-disabled-faded"
+                        disabled
+                        data-bs-toggle="modal" data-bs-target="#loginModal"
+                        onclick="this.removeAttribute('disabled')">
+                    🛒 Add To Cart
+                </button>
+                <?php endif; ?>
+                <button id="wishBtn" class="btn btn-outline-danger btn-lg">🤍</button>
             </div>
 
             <?php else: ?>
             <!-- Notify Me -->
             <?php if ($notified): ?>
-            <div class="alert alert-success py-2">✅ سنُعلمك عند توفر المنتج!</div>
+            <div class="alert alert-success py-2">✅ We'll notify you when this product is back in stock!</div>
             <?php elseif (isUser()): ?>
             <form method="POST" action="/Task(1)/handlers/notify_handler.php">
                 <input type="hidden" name="product_id" value="<?= $pid ?>">
@@ -252,10 +262,10 @@ $notified   = !empty($_GET['notified']);
                 <textarea name="comment" rows="3" placeholder=" "><?= htmlspecialchars($myReview['comment']??'') ?></textarea>
                 <label>Comment (optional)</label>
             </div>
-            <button type="submit" class="btn btn-success">Submit Review</button>
+            <button id="reviewSubmitBtn" type="submit" class="btn btn-success btn-disabled-faded" disabled aria-disabled="true">Submit Review</button>
         </form>
     </div>
-    <?php elseif (!isAdmin()): ?>
+    <?php elseif (!isAdmin() || !empty($_SESSION['admin_in_store_mode'])): ?>
     <div class="alert alert-info py-2 mb-4">
         <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a> to leave a review.
     </div>
@@ -307,6 +317,17 @@ $notified   = !empty($_GET['notified']);
 // ── Star Widget ─────────────────────────────────────────────
 const stars      = document.querySelectorAll('.star-span');
 const ratingInpt = document.getElementById('ratingInput');
+const reviewBtn  = document.getElementById('reviewSubmitBtn');
+const commentTxt = document.querySelector('textarea[name="comment"]');
+
+function checkReviewValidity() {
+    const hasRating  = ratingInpt && parseInt(ratingInpt.value) >= 1;
+    const hasComment = commentTxt && commentTxt.value.trim().length > 0;
+    if (reviewBtn && typeof updateButtonState === 'function') {
+        updateButtonState(reviewBtn, hasRating || hasComment);
+    }
+}
+
 if (stars.length) {
     stars.forEach(s => {
         s.addEventListener('mouseover', () => {
@@ -317,6 +338,7 @@ if (stars.length) {
             const v = parseInt(s.dataset.val);
             if (ratingInpt) ratingInpt.value = v;
             stars.forEach((st,i) => { st.classList.toggle('active',i<v); st.textContent=i<v?'★':'☆'; });
+            checkReviewValidity();
         });
     });
     document.getElementById('starWidget')?.addEventListener('mouseleave', () => {
@@ -324,6 +346,9 @@ if (stars.length) {
         stars.forEach((st,i) => { st.textContent=i<cur?'★':'☆'; st.style.color=i<cur?'#f59e0b':'#d1d5db'; });
     });
 }
+if (commentTxt) commentTxt.addEventListener('input', checkReviewValidity);
+// تشغيل أولي (عند تعديل التقييم)
+checkReviewValidity();
 
 // ── Qty & Cart ───────────────────────────────────────────────
 const qty   = document.getElementById('productQty');

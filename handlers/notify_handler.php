@@ -18,9 +18,14 @@ if ($pid && $uid) {
     $exists = $pdo->prepare("SELECT id FROM stock_notifications WHERE product_id=? AND user_id=? LIMIT 1");
     $exists->execute([$pid, $uid]);
     if (!$exists->fetch()) {
-        $pdo->prepare("INSERT INTO stock_notifications (product_id,user_id) VALUES (?,?)")->execute([$pid,$uid]);
+        $pdo->prepare("INSERT INTO stock_notifications (product_id,user_id) VALUES (?,?)")->execute([$pid, $uid]);
     }
 }
+
+// ── Session Locking Fix ────────────────────────────────────────
+// نُحرّر قفل الجلسة فوراً بعد انتهاء العمل بالـ session
+// لتفادي حجب الطلبات المتزامنة الأخرى.
+session_write_close();
 
 // Redirect back with message
 header('Location: /Task(1)/pages/product-details.php?id=' . $pid . '&notified=1');

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name                  VARCHAR(100)  NOT NULL,
     email                      VARCHAR(150)  NOT NULL UNIQUE,
     password                   VARCHAR(255)  NOT NULL,
-    phone_number               VARCHAR(30)   DEFAULT NULL,
+    phone_number               VARCHAR(30)   DEFAULT NULL UNIQUE,
     country                    VARCHAR(80)   DEFAULT NULL,
     city                       VARCHAR(80)   DEFAULT NULL,
     gender                     ENUM('male','female') DEFAULT NULL,
@@ -126,8 +126,10 @@ CREATE TABLE IF NOT EXISTS products (
     name_ar              VARCHAR(200) DEFAULT NULL,
     description_ar       TEXT         DEFAULT NULL,
     created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_visible           TINYINT(1)   NOT NULL DEFAULT 1,
     INDEX idx_sales(sales_count),
-    INDEX idx_date (date_added)
+    INDEX idx_date (date_added),
+    INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── 8. pivot tables ───────────────────────────────────────────
@@ -193,7 +195,7 @@ CREATE TABLE IF NOT EXISTS orders (
     address_id     INT UNSIGNED DEFAULT NULL,
     total_amount   DECIMAL(10,2) NOT NULL,
     payment_method VARCHAR(50)   NOT NULL DEFAULT 'cash_on_delivery',
-    status         ENUM('pending','shipped','completed','cancelled') NOT NULL DEFAULT 'pending',
+    status         ENUM('not_taken','taken','completed','cancelled') NOT NULL DEFAULT 'not_taken',
     is_notified    TINYINT(1) NOT NULL DEFAULT 0,
     created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user   (user_id),
@@ -254,7 +256,7 @@ VALUES (
     'Premium electronics store offering smartphones, laptops, gaming devices and smart accessories.'
 );
 
--- ── 14. contact_messages ──────────────────────────────────────
+-- ── 14. contact_messages ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS contact_messages (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id     INT UNSIGNED DEFAULT NULL,
@@ -266,3 +268,34 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     INDEX idx_sent_at (sent_at),
     CONSTRAINT fk_cm_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── 15. notifications ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id          INT UNSIGNED NOT NULL,
+    title            VARCHAR(200) NOT NULL,
+    message          TEXT         NOT NULL,
+    sender_admin_id  INT UNSIGNED DEFAULT NULL,
+    is_read          TINYINT(1)   NOT NULL DEFAULT 0,
+    created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_read (user_id, is_read),
+    INDEX idx_created   (created_at),
+    CONSTRAINT fk_notif_user  FOREIGN KEY (user_id)         REFERENCES users(id)  ON DELETE CASCADE,
+    CONSTRAINT fk_notif_admin FOREIGN KEY (sender_admin_id) REFERENCES admins(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── 16. user_strikes (Warnings/Strikes) ─────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_strikes (
+    id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id           INT UNSIGNED NOT NULL,
+    reason            TEXT         NOT NULL,
+    issued_by_admin_id INT UNSIGNED DEFAULT NULL,
+    created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    CONSTRAINT fk_strike_user  FOREIGN KEY (user_id)            REFERENCES users(id)  ON DELETE CASCADE,
+    CONSTRAINT fk_strike_admin FOREIGN KEY (issued_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── 17. orders: إضافة عمود taken_at (الـ ENUM محدَّث بالجدول أعلاه) ──────────────
+ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS taken_at DATETIME DEFAULT NULL;

@@ -1,3 +1,96 @@
+// ══════════════════════════════════════════════════════════════
+// helpers.js — الدوال المساعدة العامة للتطبيق
+// ══════════════════════════════════════════════════════════════
+
+// ── CSRF: تحديث كل حقول التوكن بالصفحة دفعة واحدة ─────────────
+/**
+ * updateCsrfToken(newToken)
+ * تُحدّث كل input[name="csrf_token"] بالصفحة بالتوكن الجديد.
+ * استدعِها بعد كل AJAX POST ناجح يُرجع csrf_token.
+ */
+function updateCsrfToken(newToken) {
+    if (!newToken) return;
+    document.querySelectorAll('input[name="csrf_token"]').forEach(el => {
+        el.value = newToken;
+    });
+    // خزّن التوكن الحالي للاستخدام الداخلي
+    window._csrfToken = newToken;
+}
+
+/**
+ * fetchWithCsrfRetry(url, options)
+ * Wrapper لـ fetch() يعيد المحاولة تلقائياً مرة واحدة
+ * إذا فشل الطلب بسبب "Invalid CSRF token".
+ *
+ * الاستخدام:
+ *   const data = await fetchWithCsrfRetry('/handlers/foo.php', {
+ *       method: 'POST',
+ *       body: formData
+ *   });
+ */
+async function fetchWithCsrfRetry(url, options = {}, _retried = false) {
+    const response = await fetch(url, options);
+    const data     = await response.json();
+
+    // نحدّث التوكن في كل حالة إذا وُجد بالـ response
+    if (data.csrf_token) {
+        updateCsrfToken(data.csrf_token);
+    }
+
+    // إذا فشل بسبب CSRF وهذه المحاولة الأولى → نجلب توكن جديد ونعيد
+    if (!data.success && data.message === 'Invalid CSRF token.' && !_retried) {
+        try {
+            const csrfRes = await fetch('/Task(1)/handlers/get_csrf.php');
+            const csrfData = await csrfRes.json();
+            const newToken = csrfData.token;
+            if (!newToken) throw new Error('No token received');
+
+            updateCsrfToken(newToken);
+
+            // أعد بناء options.body بالتوكن الجديد
+            const newOptions = { ...options };
+            if (options.body instanceof FormData) {
+                const newBody = new FormData();
+                for (const [key, val] of options.body.entries()) {
+                    newBody.append(key, key === 'csrf_token' ? newToken : val);
+                }
+                newOptions.body = newBody;
+            } else if (typeof options.body === 'string') {
+                const params = new URLSearchParams(options.body);
+                params.set('csrf_token', newToken);
+                newOptions.body = params.toString();
+            }
+
+            return fetchWithCsrfRetry(url, newOptions, true);
+        } catch (e) {
+            console.error('CSRF Retry failed:', e);
+        }
+    }
+
+    return data;
+}
+
+// نُصدّر الدوال للاستخدام العالمي
+window.updateCsrfToken     = updateCsrfToken;
+window.fetchWithCsrfRetry  = fetchWithCsrfRetry;
+
+// ── Disabled Button System (المرحلة 5) ─────────────────────────
+/**
+ * updateButtonState(buttonEl, isValid)
+ * تُضيف/تُزيل .btn-disabled-faded + disabled attribute حسب isValid.
+ */
+function updateButtonState(buttonEl, isValid) {
+    if (!buttonEl) return;
+    if (isValid) {
+        buttonEl.classList.remove('btn-disabled-faded');
+        buttonEl.removeAttribute('disabled');
+    } else {
+        buttonEl.classList.add('btn-disabled-faded');
+        buttonEl.setAttribute('disabled', 'true');
+    }
+}
+window.updateButtonState = updateButtonState;
+
 // 1. عند تحميل الصفحة، نشغل المهام الأساسية فوراً
 document.addEventListener("DOMContentLoaded", () => {
     applySavedTheme();
@@ -88,8 +181,16 @@ function initBackToTop() {
     btn.innerHTML = "↑";
     document.body.appendChild(btn);
 
+    // ── Scroll Throttle (المرحلة 3) — requestAnimationFrame ──
+    let scrollTicking = false;
     window.addEventListener("scroll", () => {
-        btn.classList.toggle("visible", window.scrollY > 350);
+        if (!scrollTicking) {
+            requestAnimationFrame(() => {
+                btn.classList.toggle("visible", window.scrollY > 350);
+                scrollTicking = false;
+            });
+            scrollTicking = true;
+        }
     });
 
     btn.addEventListener("click", () => {
@@ -238,3 +339,62 @@ function initImageFallbacks() {
         });
     }
 }
+
+// ── Confirm dialog system (Phase 25) ─────────────────────────
+function confirmAction(title, text, type = 'warning', callback) {
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: type,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, confirm',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed && typeof callback === 'function') {
+            callback();
+        }
+    });
+}
+window.confirmAction = confirmAction;
+
+// ── Global Loading Spinner (Phase 25) ─────────────────────────
+function showLoading() {
+    let overlay = document.getElementById('loadingOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.background = 'rgba(0, 0, 0, 0.4)';
+        overlay.style.backdropFilter = 'blur(3px)';
+        overlay.style.zIndex = '9999';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.innerHTML = '<div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div>';
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+
+// تشغيل الـ loading تلقائياً عند تقديم أي فورمة غير مستثناة
+document.addEventListener('submit', (e) => {
+    if (!e.defaultPrevented && !e.target.classList.contains('search-form') && !e.target.classList.contains('no-spinner')) {
+        showLoading();
+    }
+});
+

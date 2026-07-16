@@ -15,7 +15,17 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// ── Session Isolation Check ────────────────────────────────────
+if (isset($_SESSION['user_id']) && isset($_SESSION['admin_id'])) {
+    session_unset();
+    session_destroy();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/lang_helper.php';
 
 define('SESSION_IDLE_TIMEOUT', 1800); // 30 دقيقة
 
@@ -87,7 +97,7 @@ function requirePermission(string $perm): void {
     }
     if (!hasPermission($perm)) {
         http_response_code(403);
-        die('<div style="font-family:sans-serif;text-align:center;padding:60px"><h2>403 — ليس لديك صلاحية لهذه الصفحة.</h2><a href="/Task(1)/index.php">← رجوع</a></div>');
+        die('<div style="font-family:sans-serif;text-align:center;padding:60px"><h2>403 — Access Denied.</h2><a href="/Task(1)/index.php">← Back</a></div>');
     }
 }
 
@@ -153,3 +163,44 @@ function logout(): void {
     header('Location: /Task(1)/index.php');
     exit;
 }
+
+// ── Rate Limiting العام (المرحلة 4) ───────────────────────────
+function checkRateLimit(string $action, int $maxAttempts, int $timeWindowMinutes): bool {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+    $pdo = getDB();
+
+    // إنشاء الجدول ذاتياً إن لم يكن موجوداً
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS rate_limits (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            action VARCHAR(50) NOT NULL,
+            ip_address VARCHAR(45) NOT NULL,
+            user_id INT UNSIGNED DEFAULT NULL,
+            attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_action_ip_time (action, ip_address, attempted_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) FROM rate_limits
+        WHERE action = ?
+          AND (ip_address = ? OR (user_id IS NOT NULL AND user_id = ?))
+          AND attempted_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)
+    ");
+    $stmt->execute([$action, $ip, $userId, $timeWindowMinutes]);
+    return (int)$stmt->fetchColumn() >= $maxAttempts;
+}
+
+function logRateLimitAttempt(string $action): void {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+    $pdo = getDB();
+
+    $stmt = $pdo->prepare("
+        INSERT INTO rate_limits (action, ip_address, user_id)
+        VALUES (?, ?, ?)
+    ");
+    $stmt->execute([$action, $ip, $userId]);
+}
+

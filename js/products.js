@@ -180,9 +180,18 @@ function renderHomeSections(allProducts) {
         }).join('');
     };
 
-    buildCarousel('best-sellers-track',  allProducts.filter(p => p.tag === 'best-seller'));
-    buildCarousel('new-arrivals-track',   allProducts.filter(p => p.tag === 'new'));
-    buildCarousel('other-products-track', allProducts.filter(p => p.tag === 'limited' || p.tag === 'regular'));
+    // كل قسم يعرض 7 منتجات بالضبط
+    // Best Sellers: أعلى 7 بالـ tag
+    // New Arrivals: أحدث 7 بالـ tag
+    // Explore: أي 7 منتجات (مرتبة عشوائياً من كل المنتجات)
+    buildCarousel('best-sellers-track',  allProducts.filter(p => p.tag === 'best-seller').slice(0, 7));
+    buildCarousel('new-arrivals-track',   allProducts.filter(p => p.tag === 'new').slice(0, 7));
+
+    // Explore: خذ كل المنتجات، رتبها عشوائياً، وخذ أول 7
+    const exploreProducts = [...allProducts]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 7);
+    buildCarousel('other-products-track', exploreProducts);
 
     // تفعيل أزرار السهمين
     document.querySelectorAll('.section-carousel-btn').forEach(btn => {

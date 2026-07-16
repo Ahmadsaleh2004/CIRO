@@ -6,9 +6,51 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── Login ──────────────────────────────────────────────────
+    // ── دالة حساب السن بدقة ──────────────────────────────────────────
+    function calculateAge(birthDateString) {
+        if (!birthDateString) return 0;
+        const today = new Date();
+        const birthDate = new Date(birthDateString);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    // ── أطوال أرقام الهواتف المحلية المسموحة حسب الدولة ───────────────
+    const countryPhoneLengths = {
+        '+962': [9],      // الأردن
+        '+20':  [10],     // مصر
+        '+966': [9],      // السعودية
+        '+971': [9],      // الإمارات
+        '+1':   [10],     // أمريكا
+        '+44':  [10],     // بريطانيا
+        '+90':  [10],     // تركيا
+        '+49':  [10, 11]  // ألمانيا
+    };
+
+    // ── Login Validation ───────────────────────────────────────
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPass  = document.getElementById('loginPass');
+        const loginBtn   = document.getElementById('loginBtn');
+
+        function checkLoginFormValidity() {
+            const isEmailOk = loginEmail && loginEmail.value.trim() !== '';
+            const isPassOk  = loginPass && loginPass.value !== '';
+            updateButtonState(loginBtn, isEmailOk && isPassOk);
+        }
+
+        [loginEmail, loginPass].forEach(el => {
+            if (el) {
+                el.addEventListener('input', checkLoginFormValidity);
+                el.addEventListener('change', checkLoginFormValidity);
+            }
+        });
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn  = document.getElementById('loginBtn');
@@ -18,8 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
             errEl.style.display = 'none';
 
             try {
-                const res  = await fetch('/Task(1)/handlers/auth_handler.php', { method: 'POST', body: new FormData(loginForm) });
-                const data = await res.json();
+                const data = await fetchWithCsrfRetry(
+                    '/Task(1)/handlers/auth_handler.php',
+                    { method: 'POST', body: new FormData(loginForm) }
+                );
 
                 if (data.success) {
                     showToast(data.message, 'success');
@@ -29,80 +73,143 @@ document.addEventListener('DOMContentLoaded', () => {
                     errEl.style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = 'Sign In';
-                    refreshCsrfTokens();
+                    checkLoginFormValidity();
                 }
             } catch {
                 errEl.textContent  = 'Connection error. Please try again.';
                 errEl.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = 'Sign In';
+                checkLoginFormValidity();
             }
         });
+
+        // تشغيل أولي
+        checkLoginFormValidity();
     }
 
-    // ── Register ───────────────────────────────────────────────
+    // ── Register Validation ────────────────────────────────────
     const signupForm = document.getElementById('signupForm');
     if (signupForm) {
+        const regName          = document.getElementById('regName');
+        const regEmail         = document.getElementById('regEmail');
+        const regPass          = document.getElementById('regPass');
+        const regConfirmPass   = document.getElementById('regConfirmPass');
+        const phoneCountryCode = document.getElementById('phoneCountryCode');
+        const regPhoneLocal    = document.getElementById('regPhoneLocal');
+        const regGender        = document.getElementById('regGender');
+        const regBirthDate     = document.getElementById('regBirthDate');
+        const regCountry       = document.getElementById('regCountry');
+        const regCity          = document.getElementById('regCity');
+        const privacyCheck     = document.getElementById('privacyCheck');
+        const regBtn           = document.getElementById('regBtn');
+
+        function checkSignupFormValidity() {
+            const isNameOk      = regName && regName.value.trim().length >= 2;
+            // الإيميل ينتهي بـ @gmail.com حصراً
+            const isEmailOk     = regEmail && /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(regEmail.value.trim());
+            const isPassOk      = regPass && regPass.value.length >= 8;
+            const isConfirmOk   = regConfirmPass && regConfirmPass.value === regPass.value;
+            
+            // التحقق من رقم الهاتف حسب الدولة
+            const code          = phoneCountryCode ? phoneCountryCode.value : '';
+            const localPhone    = regPhoneLocal ? regPhoneLocal.value.trim() : '';
+            const allowedLens   = countryPhoneLengths[code] || [7, 8, 9, 10, 11, 12];
+            const isPhoneOk     = localPhone.length > 0 && allowedLens.includes(localPhone.length) && /^\d+$/.test(localPhone);
+            
+            const isGenderOk    = regGender && regGender.value !== '';
+            // السن يجب أن يكون 13 سنة على الأقل
+            const isBirthOk     = regBirthDate && regBirthDate.value !== '' && calculateAge(regBirthDate.value) >= 13;
+            const isCountryOk   = regCountry && regCountry.value.trim() !== '';
+            const isCityOk      = regCity && regCity.value.trim() !== '';
+            const isPrivacyOk   = privacyCheck && privacyCheck.checked;
+
+            const isValid = isNameOk && isEmailOk && isPassOk && isConfirmOk && isPhoneOk && isGenderOk && isBirthOk && isCountryOk && isCityOk && isPrivacyOk;
+            updateButtonState(regBtn, isValid);
+        }
+
+        // تسجيل دالة الصلاحيات على النطاق العالمي لتمكين استدعائها من مودال سياسة الخصوصية
+        window.checkSignupFormValidity = checkSignupFormValidity;
+
+        [regName, regEmail, regPass, regConfirmPass, phoneCountryCode, regPhoneLocal, regGender, regBirthDate, regCountry, regCity, privacyCheck].forEach(el => {
+            if (el) {
+                el.addEventListener('input', checkSignupFormValidity);
+                el.addEventListener('change', checkSignupFormValidity);
+            }
+        });
+
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn   = document.getElementById('regBtn');
             const errEl = document.getElementById('regError');
             errEl.style.display = 'none';
 
-            // Client quick-check
-            const pass    = document.getElementById('regPass')?.value;
-            const confirm = document.getElementById('regConfirmPass')?.value;
-            const privacy = document.getElementById('privacyCheck')?.checked;
-            const gender  = document.getElementById('regGender')?.value;
-
-            if (pass !== confirm) { errEl.textContent = 'Passwords do not match!'; errEl.style.display = 'block'; return; }
-            if (!gender)          { errEl.textContent = 'Please select your gender.'; errEl.style.display = 'block'; return; }
-            if (!privacy)         { errEl.textContent = 'You must agree to the Privacy Policy.'; errEl.style.display = 'block'; return; }
+            // دمج كود الدولة مع رقم الهاتف المكتوب قبل الإرسال
+            const code  = phoneCountryCode?.value || '';
+            const local = regPhoneLocal?.value    || '';
+            const phoneInput = signupForm.querySelector('input[name="phone"]');
+            if (phoneInput && local) phoneInput.value = code + local;
 
             btn.disabled  = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creating...';
 
-            // دمج كود الدولة مع رقم الهاتف
-            const code  = document.getElementById('phoneCountryCode')?.value || '';
-            const local = document.getElementById('regPhoneLocal')?.value    || '';
-            const phoneInput = signupForm.querySelector('input[name="phone"]');
-            if (phoneInput && local) phoneInput.value = code + local;
-
             try {
-                const res  = await fetch('/Task(1)/handlers/auth_handler.php', { method: 'POST', body: new FormData(signupForm) });
-                const data = await res.json();
+                const data = await fetchWithCsrfRetry(
+                    '/Task(1)/handlers/auth_handler.php',
+                    { method: 'POST', body: new FormData(signupForm) }
+                );
 
                 if (data.success) {
                     bootstrap.Modal.getInstance(document.getElementById('registerModal'))?.hide();
                     showToast(data.message, 'success');
                     signupForm.reset();
-                    refreshCsrfTokens();
                     setTimeout(() => new bootstrap.Modal(document.getElementById('loginModal')).show(), 700);
                 } else {
                     errEl.textContent  = data.message;
                     errEl.style.display = 'block';
                     btn.disabled  = false;
                     btn.innerHTML = 'Create Account';
-                    refreshCsrfTokens();
+                    checkSignupFormValidity();
                 }
             } catch {
                 errEl.textContent  = 'Connection error.';
                 errEl.style.display = 'block';
                 btn.disabled  = false;
                 btn.innerHTML = 'Create Account';
+                checkSignupFormValidity();
             }
         });
+
+        // تشغيل أولي
+        checkSignupFormValidity();
     }
 
-    // ── Forgot ─────────────────────────────────────────────────
+    // ── Forgot Validation ──────────────────────────────────────
     const forgotForm = document.getElementById('forgotForm');
     if (forgotForm) {
+        const forgotEmail = document.getElementById('forgotEmail');
+        const forgotBtn   = document.getElementById('forgotBtn');
+
+        function checkForgotFormValidity() {
+            const isEmailOk = forgotEmail && forgotEmail.value.trim() !== '';
+            updateButtonState(forgotBtn, isEmailOk);
+        }
+
+        if (forgotEmail) {
+            forgotEmail.addEventListener('input', checkForgotFormValidity);
+            forgotEmail.addEventListener('change', checkForgotFormValidity);
+        }
+
         forgotForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const msgEl = document.getElementById('forgotMsg');
+            forgotBtn.disabled = true;
+
             try {
-                const res  = await fetch('/Task(1)/handlers/auth_handler.php', { method: 'POST', body: new FormData(forgotForm) });
-                const data = await res.json();
+                const data = await fetchWithCsrfRetry(
+                    '/Task(1)/handlers/auth_handler.php',
+                    { method: 'POST', body: new FormData(forgotForm) }
+                );
                 msgEl.textContent = data.message;
                 msgEl.className   = `alert py-2 small mb-3 alert-${data.success ? 'success' : 'danger'}`;
                 msgEl.style.display = 'block';
@@ -110,20 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgEl.textContent   = 'Connection error.';
                 msgEl.className     = 'alert py-2 small mb-3 alert-danger';
                 msgEl.style.display = 'block';
+            } finally {
+                forgotBtn.disabled = false;
+                checkForgotFormValidity();
             }
         });
+
+        // تشغيل أولي
+        checkForgotFormValidity();
     }
 
 });
-
-// ── تجديد CSRF Token ─────────────────────────────────────────
-async function refreshCsrfTokens() {
-    try {
-        const res  = await fetch('/Task(1)/handlers/get_csrf.php');
-        const data = await res.json();
-        document.querySelectorAll('input[name="csrf_token"]').forEach(el => el.value = data.token);
-    } catch { /* silent */ }
-}
 
 // ── Logout ────────────────────────────────────────────────────
 window.logoutUser = async function () {

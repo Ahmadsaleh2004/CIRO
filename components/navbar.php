@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../helpers/auth_helper.php';
 require_once __DIR__ . '/../helpers/csrf_helper.php';
+require_once __DIR__ . '/../helpers/lang_helper.php';
 
 $currentPage   = basename($_SERVER['PHP_SELF']);
 $loggedInUser  = isUser();
@@ -77,6 +78,15 @@ if ($loggedInAdmin) {
                     ❤️ <span id="wishlist-count" class="counter-badge" aria-live="polite">0</span>
                 </a>
 
+                <!-- Bell الإشعارات — للمستخدم المسجّل فقط -->
+                <?php if ($loggedInUser): ?>
+                <button id="notifBell" class="btn btn-outline-light position-relative"
+                        aria-label="Notifications" title="Notifications" type="button">
+                    🔔 <span id="notifBadge" class="counter-badge"
+                             style="background:#ef4444;display:none;top:-4px;right:-4px;" aria-live="polite">0</span>
+                </button>
+                <?php endif; ?>
+
                 <!-- Cart — للمستخدم والأدمن فقط -->
                 <?php if ($loggedInUser || $loggedInAdmin): ?>
                 <button type="button"
@@ -93,10 +103,9 @@ if ($loggedInAdmin) {
 
                 <!-- زر لوحة التحكم — للأدمن فقط على الصفحات العامة -->
                 <?php if ($loggedInAdmin): ?>
-                <a href="/Task(1)/admin/dashboard.php"
-                   class="btn btn-warning fw-semibold" title="Admin Panel">
+                <button type="button" class="btn btn-warning fw-semibold" id="adminPanelBtn" title="Return to Admin Panel">
                     🛠️ Admin Panel
-                </a>
+                </button>
                 <?php endif; ?>
 
                 <!-- Dropdown المستخدم -->
@@ -146,3 +155,63 @@ if ($loggedInAdmin) {
         </div>
     </div>
 </nav>
+
+<?php if ($loggedInAdmin): ?>
+<script>
+// ── Admin Panel Button — يطلب كلمة السر قبل العودة للأدمن ──────
+document.addEventListener('DOMContentLoaded', function() {
+    var adminBtn = document.getElementById('adminPanelBtn');
+    if (!adminBtn) return;
+
+    adminBtn.addEventListener('click', function() {
+        Swal.fire({
+            title: '🔐 Confirm Your Identity',
+            html: '<p class="text-muted small mb-3">Enter your admin password to return to the Admin Panel.</p>' +
+                  '<input type="password" id="swal-admin-pass" class="form-control" placeholder="Your password" autocomplete="current-password">',
+            showCancelButton: true,
+            confirmButtonText: 'Confirm',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#d97706',
+            focusConfirm: false,
+            didOpen: function() {
+                var passEl = document.getElementById('swal-admin-pass');
+                if (passEl) {
+                    passEl.focus();
+                    passEl.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') Swal.clickConfirm();
+                    });
+                }
+            },
+            preConfirm: function() {
+                var pass = document.getElementById('swal-admin-pass').value;
+                if (!pass) {
+                    Swal.showValidationMessage('Please enter your password.');
+                    return false;
+                }
+                return pass;
+            }
+        }).then(async function(result) {
+            if (!result.isConfirmed) return;
+
+            var fd = new FormData();
+            fd.append('password',   result.value);
+            fd.append('redirect',   '/Task(1)/admin/support.php');
+            fd.append('csrf_token', window._csrfToken || '');
+
+            var data = await fetchWithCsrfRetry('/Task(1)/handlers/admin_reauth.php', { method: 'POST', body: fd });
+
+            if (data.success) {
+                window.location.href = '/Task(1)/admin/support.php';
+            } else {
+                Swal.fire({
+                    title: 'Incorrect Password',
+                    text: data.message || 'Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#d97706'
+                });
+            }
+        });
+    });
+});
+</script>
+<?php endif; ?>

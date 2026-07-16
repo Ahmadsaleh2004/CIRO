@@ -19,21 +19,26 @@ $msg = $err = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     verifyCsrfToken($_POST['csrf_token'] ?? '');
 
-    $fullName = trim($_POST['full_name'] ?? '');
-    $email    = trim($_POST['email']     ?? '');
-    $msgText  = trim($_POST['message']   ?? '');
-    $uid      = getCurrentUserId();
+    if (checkRateLimit('contact_us', 5, 15)) {
+        $err = 'You have exceeded the message limit. Please wait 15 minutes.';
+    } else {
+        $fullName = trim($_POST['full_name'] ?? '');
+        $email    = trim($_POST['email']     ?? '');
+        $msgText  = trim($_POST['message']   ?? '');
+        $uid      = getCurrentUserId();
 
-    if (strlen($fullName) < 2)
-        $err = 'يرجى إدخال الاسم (حرفان على الأقل).';
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL))
-        $err = 'يرجى إدخال إيميل صحيح.';
-    elseif (strlen($msgText) < 10)
-        $err = 'الرسالة قصيرة جداً (10 أحرف على الأقل).';
-    else {
-        $pdo->prepare("INSERT INTO contact_messages (user_id,full_name,email,message,is_notified) VALUES (?,?,?,?,0)")
-            ->execute([$uid, $fullName, $email, $msgText]);
-        $msg = '✅ تم إرسال رسالتك! سنرد عليك قريباً.';
+        if (strlen($fullName) < 2)
+            $err = 'Please enter your name (at least 2 characters).';
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL))
+            $err = 'Please enter a valid email address.';
+        elseif (strlen($msgText) < 10)
+            $err = 'Message is too short (at least 10 characters).';
+        else {
+            $pdo->prepare("INSERT INTO contact_messages (user_id,full_name,email,message,is_notified) VALUES (?,?,?,?,0)")
+                ->execute([$uid, $fullName, $email, $msgText]);
+            logRateLimitAttempt('contact_us');
+            $msg = '✅ Your message has been sent! We will get back to you soon.';
+        }
     }
 }
 
@@ -42,7 +47,7 @@ $prefillName  = $_SESSION['user_name']  ?? '';
 $prefillEmail = $_SESSION['user_email'] ?? '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -112,22 +117,25 @@ $prefillEmail = $_SESSION['user_email'] ?? '';
                     <input type="hidden" name="csrf_token"   value="<?= htmlspecialchars($csrf) ?>">
 
                     <div class="float-group">
-                        <input type="text" name="full_name" placeholder=" " required
+                        <input type="text" id="contactName" name="full_name" placeholder=" " required
                                value="<?= htmlspecialchars($prefillName) ?>"
+                               <?= $prefillName ? 'readonly style="opacity:.6;cursor:not-allowed;"' : '' ?>
                                autocomplete="name">
                         <label>Full Name</label>
                     </div>
                     <div class="float-group">
-                        <input type="email" name="email" placeholder=" " required
+                        <input type="email" id="contactEmail" name="email" placeholder=" " required
                                value="<?= htmlspecialchars($prefillEmail) ?>"
+                               <?= $prefillEmail ? 'readonly style="opacity:.6;cursor:not-allowed;"' : '' ?>
                                autocomplete="email">
                         <label>Email Address</label>
                     </div>
                     <div class="float-group">
-                        <textarea name="message" rows="5" placeholder=" " required></textarea>
+                        <textarea id="contactMessage" name="message" rows="5" placeholder=" " required></textarea>
                         <label>Your Message</label>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Send Message</button>
+                    <button id="contactSendBtn" type="submit" class="btn btn-success w-100 btn-disabled-faded"
+                            disabled aria-disabled="true">Send Message</button>
                 </form>
             </div>
         </div>
@@ -137,5 +145,18 @@ $prefillEmail = $_SESSION['user_email'] ?? '';
 </main>
 
 <?php include '../components/footer.php'; ?>
+<script>
+(function () {
+    const msgArea = document.getElementById('contactMessage');
+    const sendBtn = document.getElementById('contactSendBtn');
+    if (!msgArea || !sendBtn) return;
+    function checkContact() {
+        const ok = msgArea.value.trim().length >= 10;
+        updateButtonState(sendBtn, ok);
+    }
+    msgArea.addEventListener('input', checkContact);
+    checkContact();
+})();
+</script>
 </body>
 </html>
