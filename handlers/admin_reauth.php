@@ -33,10 +33,10 @@ if (!$admin || !password_verify($pass, $admin['password'])) {
 // كلمة السر صحيحة
 unset($_SESSION['admin_in_store_mode']); // نظّف العلم إن وُجد
 
-$redirect = $_POST['redirect'] ?? '/Task(1)/admin/support.php';
+$redirect = $_POST['redirect'] ?? '/Task(1)/admin/home.php';
 // تأكد أن الـ redirect آمن
 if (!str_contains($redirect, '/Task(1)/admin/')) {
-    $redirect = '/Task(1)/admin/support.php';
+    $redirect = '/Task(1)/admin/home.php';
 }
 
 echo json_encode([

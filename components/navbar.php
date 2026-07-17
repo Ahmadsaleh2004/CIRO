@@ -195,13 +195,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             var fd = new FormData();
             fd.append('password',   result.value);
-            fd.append('redirect',   '/Task(1)/admin/support.php');
+            fd.append('redirect',   '/Task(1)/admin/home.php');
             fd.append('csrf_token', window._csrfToken || '');
 
             var data = await fetchWithCsrfRetry('/Task(1)/handlers/admin_reauth.php', { method: 'POST', body: fd });
 
             if (data.success) {
-                window.location.href = '/Task(1)/admin/support.php';
+                window.location.href = '/Task(1)/admin/home.php';
             } else {
                 Swal.fire({
                     title: 'Incorrect Password',

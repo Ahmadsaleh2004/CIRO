@@ -62,7 +62,7 @@ switch ($action) {
             $_SESSION['last_active'] = time();
             loadAdminPermissions((int)$admin['id']);
             respond(true, 'Welcome, ' . $admin['full_name'], [
-                'redirect' => '/Task(1)/admin/support.php',
+                'redirect' => '/Task(1)/admin/home.php',
                 'type'     => 'admin',
             ]);
         }
