@@ -2,6 +2,7 @@
 /**
  * admin/manage-orders.php — الجزء 14/18
  */
+ob_start();
 $pageTitle = 'Manage Orders';
 require_once __DIR__ . '/../admin/layout.php';
 require_once __DIR__ . '/../helpers/audit_log_helper.php';
@@ -91,6 +92,11 @@ $csrf = generateCsrfToken();
 <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h1>📦 Manage Orders <span class="badge bg-secondary ms-2"><?= $totalOrders ?></span></h1>
     <div class="d-flex gap-2 align-items-center flex-wrap">
+        <?php
+        $csvParams = http_build_query(array_filter(['q' => $search, 'status' => $filter]));
+        $csvUrl    = '/Task(1)/handlers/export_csv.php?type=orders' . ($csvParams ? '&' . $csvParams : '');
+        ?>
+        <a href="<?= htmlspecialchars($csvUrl) ?>" class="btn btn-sm btn-export-csv" target="_blank">📄 Export CSV</a>
         <!-- Search -->
         <form class="d-flex search-form" method="GET" action="">
             <?php if ($filter): ?>
@@ -192,14 +198,6 @@ $extraScripts = '<script>
         window.location.href = "/Task(1)/admin/order-details.php?id=" + id;
     }
     window.goToOrderDetails = goToOrderDetails;
-
-    function filterStatus(status) {
-        var p = new URLSearchParams(window.location.search);
-        if (status) p.set("status", status); else p.delete("status");
-        p.delete("page");
-        window.location.href = "?" + p.toString();
-    }
-    window.filterStatus = filterStatus;
 
     // ── Delete AJAX ───────────────────────────────────────────
     document.querySelectorAll(".delete-order-btn").forEach(function(btn) {

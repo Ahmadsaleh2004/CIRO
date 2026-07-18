@@ -60,39 +60,32 @@ function getTag(array $p): string {
     return 'regular';
 }
 ?>
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products | Cairo Store</title>
-    <meta name="description" content="Browse all products at Cairo Store.">
-    <meta name="robots" content="index, follow">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-    <?php if ($isAdminProd): ?>
-    <link rel="stylesheet" href="/Task(1)/css/admin.css">
-    <?php endif; ?>
-    <style>
-        /* ── Price Range Slider ── */
-        #priceRange { accent-color: var(--accent); }
-        /* ── Autocomplete ── */
-        #autocomplete-list { position:absolute; top:100%; left:0; right:0; z-index:999;
-            background:var(--card-bg); border:1px solid var(--section-border);
-            border-radius:0 0 8px 8px; box-shadow:0 8px 24px var(--shadow-hover);
-            max-height:220px; overflow-y:auto; display:none; }
-        #autocomplete-list li { padding:9px 14px; cursor:pointer; color:var(--text-color);
-            font-size:.88rem; border-bottom:1px solid var(--section-border); list-style:none; }
-        #autocomplete-list li:hover { background:rgba(99,102,241,.1); }
-        #search-wrapper { position:relative; }
-        /* ── Cart bounce ── */
-        @keyframes cartBounce{0%,100%{transform:scale(1)}30%{transform:scale(1.3)}60%{transform:scale(.9)}}
-        .cart-bounce{animation:cartBounce .5s cubic-bezier(.36,.07,.19,.97)}
-    </style>
-</head>
-<body class="page-transitioning">
-<a href="#main-content" class="skip-nav">Skip to main content</a>
+<?php
+$pageTitle = 'Products';
+$pageDescription = 'Browse all products at Cairo Store.';
+$extraHead = '';
+if ($isAdminProd) {
+    $extraHead .= '<link rel="stylesheet" href="/Task(1)/css/admin.css">' . "\n";
+}
+$extraHead .= '
+<style>
+    /* ── Price Range Slider ── */
+    #priceRange { accent-color: var(--accent); }
+    /* ── Autocomplete ── */
+    #autocomplete-list { position:absolute; top:100%; left:0; right:0; z-index:999;
+        background:var(--card-bg); border:1px solid var(--section-border);
+        border-radius:0 0 8px 8px; box-shadow:0 8px 24px var(--shadow-hover);
+        max-height:220px; overflow-y:auto; display:none; }
+    #autocomplete-list li { padding:9px 14px; cursor:pointer; color:var(--text-color);
+        font-size:.88rem; border-bottom:1px solid var(--section-border); list-style:none; }
+    #autocomplete-list li:hover { background:rgba(99,102,241,.1); }
+    #search-wrapper { position:relative; }
+    /* ── Cart bounce ── */
+    @keyframes cartBounce{0%,100%{transform:scale(1)}30%{transform:scale(1.3)}60%{transform:scale(.9)}}
+    .cart-bounce{animation:cartBounce .5s cubic-bezier(.36,.07,.19,.97)}
+</style>';
+require_once __DIR__ . '/../components/header.php';
+?>
 <?php include '../components/navbar.php'; ?>
 
 <main id="main-content" role="main">

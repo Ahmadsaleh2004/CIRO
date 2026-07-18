@@ -3,9 +3,11 @@
  * admin/manage-admins.php — المرحلة 6
  * حصراً لـ Role A
  */
+ob_start();
 $pageTitle = 'Manage Admins';
 require_once __DIR__ . '/../admin/layout.php';
 require_once __DIR__ . '/../helpers/audit_log_helper.php';
+require_once __DIR__ . '/../helpers/http_helper.php';
 
 // قيد صارم بالكود — Role A فقط
 if (!isRoleA()) {
@@ -62,7 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
         if ($chk->fetch()) {
             $err = 'This email is already registered.';
         } else {
-            $hash    = password_hash($_POST['new_password'] ?? '', PASSWORD_BCRYPT, ['cost'=>12]);
+            $newPass = trim($_POST['new_password'] ?? '');
+            if (!isStrongPassword($newPass)) {
+                $err = 'Password must be at least 8 characters with uppercase, lowercase, number, and symbol.';
+            } else {
+            $hash    = password_hash($newPass, PASSWORD_BCRYPT, ['cost'=>12]);
             $newRole = $_POST['new_role'] ?? 'B';
             $ins = $pdo->prepare("INSERT INTO admins (full_name,email,password,phone_number,role,added_by) VALUES (?,?,?,?,?,?)");
             $ins->execute([
@@ -95,9 +101,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin'])) {
 
             logAdminAction($adminId,'add_admin','admin',$newId,"added: {$newEmail} role:{$newRole}");
             $msg = "✅ Admin ({$newEmail}) added successfully.";
-        }
-    }
-}
+            } // end isStrongPassword check
+        } // end email duplicate check
+    } // end email format check
+} // end add_admin}
 }
 
 // ══ حذف أدمن ═════════════════════════════════════════════════
@@ -176,6 +183,7 @@ $admins = $pdo->query("
 <div class="admin-page-header">
     <h1>👑 Manage Admins</h1>
     <div class="d-flex gap-2">
+        <a href="/Task(1)/handlers/export_csv.php?type=admins" class="btn btn-success btn-sm btn-export-csv" target="_blank">📄 Export CSV</a>
         <button class="btn btn-success" data-bs-toggle="collapse" data-bs-target="#addAdminForm">+ Add Admin</button>
         <button class="btn btn-outline-info" data-bs-toggle="collapse" data-bs-target="#broadcastForm">📢 Broadcast Notification</button>
     </div>

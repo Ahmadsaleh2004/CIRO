@@ -68,28 +68,12 @@ $productsJS = array_values(array_map(function($p) use ($bestSellerIds, $newArriv
         'categories'  => $p['categories'] ?? '',
     ];
 }, $products));
+
+$pageTitle = 'Home';
+$pageDescription = 'Cairo Store — Best Electronics Store with Premium Products and Fast Delivery';
+$extraHead = '<meta property="og:url" content="https://cairostore.com">';
+require_once __DIR__ . '/components/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cairo Store | Home</title>
-    <meta name="description" content="Cairo Store — Best Electronics Store with Premium Products and Fast Delivery">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title"       content="Cairo Store | Home">
-    <meta property="og:description" content="Best Electronics Store with Premium Products and Fast Delivery">
-    <meta property="og:type"        content="website">
-    <meta property="og:url"         content="https://cairostore.com">
-    <meta name="twitter:card"       content="summary_large_image">
-    <meta name="twitter:title"      content="Cairo Store | Home">
-    <meta name="twitter:description"content="Best Electronics Store with Premium Products and Fast Delivery">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-</head>
-<body class="page-transitioning">
-<a href="#main-content" class="skip-nav">Skip to main content</a>
 <?php include 'components/navbar.php'; ?>
 
 <main id="main-content" role="main">

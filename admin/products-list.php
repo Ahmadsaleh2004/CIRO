@@ -2,6 +2,7 @@
 /**
  * admin/products-list.php
  */
+ob_start();
 $pageTitle = 'Products';
 require_once __DIR__ . '/../admin/layout.php';
 require_once __DIR__ . '/../helpers/audit_log_helper.php';
@@ -37,7 +38,13 @@ $csrf = generateCsrfToken();
 
 <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h1>🛍️ Products <span class="badge bg-secondary ms-2"><?= $totalProducts ?></span></h1>
-    <a href="/Task(1)/admin/add-product.php" class="btn btn-success btn-sm">+ Add Product</a>
+    <div class="d-flex gap-2">
+        <?php
+        $csvUrl = '/Task(1)/handlers/export_csv.php?type=products' . ($search ? '&q=' . urlencode($search) : '');
+        ?>
+        <a href="<?= htmlspecialchars($csvUrl) ?>" class="btn btn-success btn-sm btn-export-csv" target="_blank">📄 Export CSV</a>
+        <a href="/Task(1)/admin/add-product.php" class="btn btn-success btn-sm">+ Add Product</a>
+    </div>
 </div>
 
 <div class="mb-3">

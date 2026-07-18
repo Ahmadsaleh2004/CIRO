@@ -15,47 +15,41 @@ updateUserActivity();
 
 $addresses = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id=? ORDER BY is_default DESC, created_at DESC");
 $addresses->execute([$userId]);
+require_once __DIR__ . '/../helpers/settings_helper.php';
+
 $addresses = $addresses->fetchAll();
 
-$ws           = $pdo->query("SELECT return_policy,terms_and_conditions FROM website_settings LIMIT 1")->fetch() ?: [];
+$ws           = getSiteSettings();
 $returnPolicy = $ws['return_policy'] ?? '14-day return policy.';
 $csrf         = generateCsrfToken();
+
+$pageTitle = 'Checkout';
+$noIndex = true;
+$extraHead = '
+<style>
+    .step-bar { display:flex; justify-content:center; gap:0; margin-bottom:2rem; }
+    .step-item { display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; max-width:150px; position:relative; }
+    .step-circle { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+        font-weight:700; border:2px solid var(--section-border); background:var(--card-bg);
+        color:var(--text-color); transition:.3s; }
+    .step-item.active .step-circle  { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .step-item.done   .step-circle  { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .step-label { font-size:.72rem; color:var(--placeholder-color); }
+    .step-item.active .step-label { color:var(--accent); font-weight:600; }
+    .step-item:not(:last-child)::after { content:\'\'; position:absolute; top:19px; left:calc(50% + 19px);
+        width:calc(100% - 38px); height:2px; background:var(--section-border); }
+    .step-item.done:not(:last-child)::after { background:#16a34a; }
+    .checkout-step { display:none; }
+    .checkout-step.active { display:block; }
+    .trust-badges { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:14px; }
+    .trust-badge  { display:flex; align-items:center; gap:5px; font-size:.78rem; color:var(--placeholder-color); }
+    .addr-radio:checked + .addr-label { border-color:var(--accent)!important; }
+    .addr-label { border:2px solid var(--section-border)!important; border-radius:10px; padding:12px 14px;
+        cursor:pointer; display:block; transition:.2s; }
+    .addr-label:hover { border-color:var(--accent)!important; }
+</style>';
+require_once __DIR__ . '/../components/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | Cairo Store</title>
-    <meta name="robots" content="noindex,nofollow">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-    <style>
-        .step-bar { display:flex; justify-content:center; gap:0; margin-bottom:2rem; }
-        .step-item { display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; max-width:150px; position:relative; }
-        .step-circle { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-            font-weight:700; border:2px solid var(--section-border); background:var(--card-bg);
-            color:var(--text-color); transition:.3s; }
-        .step-item.active .step-circle  { background:var(--accent); border-color:var(--accent); color:#fff; }
-        .step-item.done   .step-circle  { background:#16a34a; border-color:#16a34a; color:#fff; }
-        .step-label { font-size:.72rem; color:var(--placeholder-color); }
-        .step-item.active .step-label { color:var(--accent); font-weight:600; }
-        .step-item:not(:last-child)::after { content:''; position:absolute; top:19px; left:calc(50% + 19px);
-            width:calc(100% - 38px); height:2px; background:var(--section-border); }
-        .step-item.done:not(:last-child)::after { background:#16a34a; }
-        .checkout-step { display:none; }
-        .checkout-step.active { display:block; }
-        .trust-badges { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:14px; }
-        .trust-badge  { display:flex; align-items:center; gap:5px; font-size:.78rem; color:var(--placeholder-color); }
-        .addr-radio:checked + .addr-label { border-color:var(--accent)!important; }
-        .addr-label { border:2px solid var(--section-border)!important; border-radius:10px; padding:12px 14px;
-            cursor:pointer; display:block; transition:.2s; }
-        .addr-label:hover { border-color:var(--accent)!important; }
-    </style>
-</head>
-<body class="page-transitioning">
-<a href="#main-content" class="skip-nav">Skip to main content</a>
 <?php include '../components/navbar.php'; ?>
 
 <main id="main-content" class="container py-5">

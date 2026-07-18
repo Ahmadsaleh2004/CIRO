@@ -1082,16 +1082,17 @@ select optgroup {
 .form-check-input {
     background-color: var(--input-bg) !important;
     border-color: var(--input-border) !important;
+    accent-color: #16a34a;
 }
 
 .form-check-input:checked {
-    background-color: var(--accent) !important;
-    border-color: var(--accent) !important;
+    background-color: #16a34a !important;
+    border-color: #16a34a !important;
 }
 
 .form-check-input:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.20) !important;
 }
 
 .form-check-label {

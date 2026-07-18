@@ -4,10 +4,10 @@
  * 3 أقسام للمستخدم: بياناتي | طلباتي | عناويني
  * + قسم 4 للأدمن Role A: تغيير الرتبة
  */
-
 require_once __DIR__ . '/../helpers/auth_helper.php';
 require_once __DIR__ . '/../helpers/csrf_helper.php';
 require_once __DIR__ . '/../helpers/audit_log_helper.php';
+require_once __DIR__ . '/../helpers/http_helper.php';
 
 requireLogin();
 
@@ -81,6 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         }
         if (!$updateErr) {
         $newPass = trim($_POST['new_password'] ?? '');
+
+        // تحقق من قوة كلمة السر الجديدة إذا أُدخلت
+        if ($newPass && !isStrongPassword($newPass)) {
+            $updateErr = 'New password must be at least 8 characters with uppercase, lowercase, number, and symbol.';
+        }
+
+        if (!$updateErr) {
         if ($isAdm) {
             if ($newPass) {
                 $newHash = password_hash($newPass, PASSWORD_BCRYPT, ['cost' => 12]);
@@ -194,16 +201,30 @@ if (!$isAdm && $userId) {
     $stmt2 = $pdo->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
     $stmt2->execute([$userId]);
     $orders = $stmt2->fetchAll();
-    foreach ($orders as &$ord) {
-        $s = $pdo->prepare("
+
+    if (!empty($orders)) {
+        // استعلام واحد لكل عناصر الطلبات بدل N+1
+        $orderIds    = array_column($orders, 'order_id');
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $itemsStmt   = $pdo->prepare("
             SELECT oi.*, p.name, p.image_path
-            FROM order_items oi JOIN products p ON p.id=oi.product_id
-            WHERE oi.order_id=?
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id IN ({$placeholders})
         ");
-        $s->execute([$ord['order_id']]);
-        $ord['items'] = $s->fetchAll();
+        $itemsStmt->execute(array_values($orderIds));
+        $allItems = $itemsStmt->fetchAll();
+
+        // تجميع العناصر حسب order_id
+        $itemsByOrder = [];
+        foreach ($allItems as $item) {
+            $itemsByOrder[$item['order_id']][] = $item;
+        }
+        foreach ($orders as &$ord) {
+            $ord['items'] = $itemsByOrder[$ord['order_id']] ?? [];
+        }
+        unset($ord);
     }
-    unset($ord);
 }
 
 // ── جلب العناوين ─────────────────────────────────────────────
@@ -217,26 +238,19 @@ if (!$isAdm && $userId) {
 $csrf = generateCsrfToken();
 $statusColors = ['not_taken'=>'warning text-dark','taken'=>'primary','completed'=>'success','cancelled'=>'danger'];
 ?>
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Info | Cairo Store</title>
-    <meta name="robots" content="noindex,nofollow">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-    <style>
-        .info-tab-btn { color:var(--text-color)!important; border:1px solid var(--section-border); border-radius:8px; padding:8px 18px; background:var(--card-bg); cursor:pointer; transition:.2s; }
-        .info-tab-btn.active { background:var(--accent)!important; color:#fff!important; border-color:var(--accent); }
-        .order-card { border:1px solid var(--section-border); border-radius:12px; padding:16px; margin-bottom:14px; }
-        .addr-card { border:2px solid var(--section-border); border-radius:12px; padding:14px; position:relative; }
-        .addr-card.default { border-color:var(--accent); }
-    </style>
-</head>
-<body class="page-transitioning">
-<a href="#main-content" class="skip-nav">Skip to main content</a>
+<?php
+$pageTitle = 'My Info';
+$noIndex = true;
+$extraHead = '
+<style>
+    .info-tab-btn { color:var(--text-color)!important; border:1px solid var(--section-border); border-radius:8px; padding:8px 18px; background:var(--card-bg); cursor:pointer; transition:.2s; }
+    .info-tab-btn.active { background:var(--accent)!important; color:#fff!important; border-color:var(--accent); }
+    .order-card { border:1px solid var(--section-border); border-radius:12px; padding:16px; margin-bottom:14px; }
+    .addr-card { border:2px solid var(--section-border); border-radius:12px; padding:14px; position:relative; }
+    .addr-card.default { border-color:var(--accent); }
+</style>';
+require_once __DIR__ . '/../components/header.php';
+?>
 <?php include '../components/navbar.php'; ?>
 
 <main id="main-content" class="container py-5">

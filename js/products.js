@@ -14,6 +14,20 @@
  */
 
 /* ================================================
+   escapeHtml — shared utility للتهريب من XSS
+   ================================================ */
+function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+window.escHtml = escHtml;
+
+/* ================================================
    Fix Image Path — shared utility
    ================================================ */
 function fixImagePath(imgPath) {
@@ -130,11 +144,11 @@ function renderSlider(allProducts) {
 
     sliderInner.innerHTML = sliderProducts.map((p, index) => {
         const imgSrc = fixImagePath(p.image || p.image_path || '');
-        const cap    = captions[p.id] || { title: p.name, sub: p.description };
+        const cap    = captions[p.id] || { title: escHtml(p.name), sub: escHtml(p.description) };
         return `
         <div class="carousel-item ${index === 0 ? 'active' : ''}">
             <a href="/Task(1)/pages/product-details.php?id=${p.id}">
-                <img src="${imgSrc}" class="d-block w-100 slider-image" alt="${p.name}" loading="lazy">
+                <img src="${imgSrc}" class="d-block w-100 slider-image" alt="${escHtml(p.name)}" loading="lazy">
             </a>
             <div class="carousel-caption d-none d-md-block text-shadow">
                 <h2 class="display-4 fw-bold">${cap.title}</h2>
@@ -170,9 +184,9 @@ function renderHomeSections(allProducts) {
             <div class="carousel-item-wrap reveal">
                 <a href="/Task(1)/pages/product-details.php?id=${p.id}" class="home-product-card">
                     ${tag.label ? `<span class="hpc-tag ${tag.cls}">${tag.label}</span>` : ''}
-                    <img src="${imgSrc}" alt="${p.name}" class="hpc-img" loading="lazy">
+                    <img src="${imgSrc}" alt="${escHtml(p.name)}" class="hpc-img" loading="lazy">
                     <div class="hpc-body">
-                        <div class="hpc-name">${p.name}</div>
+                        <div class="hpc-name">${escHtml(p.name)}</div>
                         <div class="hpc-price">$${p.price}</div>
                     </div>
                 </a>

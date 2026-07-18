@@ -26,19 +26,11 @@ $items = $items->fetchAll();
 
 $statusColors = ['not_taken'=>'warning text-dark','taken'=>'primary','completed'=>'success','cancelled'=>'danger'];
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmed | Cairo Store</title>
-    <meta name="robots" content="noindex,nofollow">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-</head>
-<body class="page-transitioning">
-<a href="#main-content" class="skip-nav">Skip to main content</a>
+<?php
+$pageTitle = 'Order Confirmed';
+$noIndex = true;
+require_once __DIR__ . '/../components/header.php';
+?>
 <?php include '../components/navbar.php'; ?>
 
 <main id="main-content" class="container py-5">

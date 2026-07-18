@@ -9,6 +9,7 @@ require_once __DIR__ . '/../config/error_handler.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../helpers/auth_helper.php';
 require_once __DIR__ . '/../helpers/csrf_helper.php';
+require_once __DIR__ . '/../helpers/http_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -18,13 +19,6 @@ if (($_GET['action'] ?? '') === 'logout_get') {
 }
 
 $action = $_POST['action'] ?? '';
-
-function respond(bool $ok, string $msg, array $extra = []): void {
-    // أرجع التوكن الجديد دائماً لمزامنة الـ DOM
-    $extra['csrf_token'] = generateCsrfToken();
-    echo json_encode(array_merge(['success' => $ok, 'message' => $msg], $extra));
-    exit;
-}
 
 switch ($action) {
 
@@ -129,7 +123,7 @@ switch ($action) {
             respond(false, 'Please enter a valid email address.');
         if (!str_ends_with($email, '@gmail.com'))
             respond(false, 'Email must be a @gmail.com address.');
-        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $pass))
+        if (!isStrongPassword($pass))
             respond(false, 'Password must be at least 8 characters with uppercase, lowercase, number, and symbol.');
         if ($pass !== $confirmPass)
             respond(false, 'Passwords do not match.');

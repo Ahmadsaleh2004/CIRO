@@ -165,12 +165,6 @@ function updateCounters() {
     highlightNavIcons();
 }
 
-// 4. الدالة الموحدة لحساب الخصم
-function calculateDiscount(price) {
-    const oldPrice = Math.round(price * 1.25);
-    const discount = Math.round(((oldPrice - price) / oldPrice) * 100);
-    return { oldPrice, discount };
-}
 
 // 5. Back to Top زرار
 function initBackToTop() {
@@ -358,6 +352,21 @@ function confirmAction(title, text, type = 'warning', callback) {
     });
 }
 window.confirmAction = confirmAction;
+
+// ── filterStatus — shared across admin pages ───────────────────
+/**
+ * filterStatus(value)
+ * Sets ?status=value in URL and reloads, removing page param.
+ * Used by manage-orders.php and manage-users.php
+ */
+function filterStatus(value) {
+    var p = new URLSearchParams(window.location.search);
+    if (value) p.set('status', value);
+    else       p.delete('status');
+    p.delete('page');
+    window.location.href = '?' + p.toString();
+}
+window.filterStatus = filterStatus;
 
 // ── Global Loading Spinner (Phase 25) ─────────────────────────
 function showLoading() {

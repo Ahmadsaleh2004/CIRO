@@ -85,35 +85,25 @@ $stock      = (int)$p['stock_quantity'];
 $imgSrc     = htmlspecialchars($p['image_path'] ?: '');
 $csrf       = generateCsrfToken();
 $notified   = !empty($_GET['notified']);
+<?php
+$pageTitle = $p['name'];
+$pageDescription = substr($p['description']??'', 0, 155);
+$pageImage = $imgSrc;
+$extraHead = '
+<meta property="og:type" content="product">
+<style>
+    .zoom-wrapper{overflow:hidden;border-radius:14px;cursor:zoom-in;background:var(--bg-color);}
+    .zoom-wrapper img{transition:transform .4s ease;width:100%;display:block;}
+    .zoom-wrapper:hover img{transform:scale(1.35);}
+    @media(hover:none){.zoom-wrapper:hover img{transform:none;}}
+    .star-span{font-size:1.4rem;cursor:pointer;transition:transform .15s;color:#d1d5db;}
+    .star-span.active,.star-span:hover{color:#f59e0b;transform:scale(1.2);}
+    .review-card{border:1px solid var(--section-border);border-radius:10px;padding:14px;margin-bottom:12px;}
+    @keyframes cartBounce{0%,100%{transform:scale(1)}30%{transform:scale(1.3)}60%{transform:scale(.9)}}
+    .cart-bounce{animation:cartBounce .5s cubic-bezier(.36,.07,.19,.97)}
+</style>';
+require_once __DIR__ . '/../components/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($p['name']) ?> | Cairo Store</title>
-    <meta name="description" content="<?= htmlspecialchars(substr($p['description']??'',0,155)) ?>">
-    <meta property="og:title"       content="<?= htmlspecialchars($p['name']) ?> | Cairo Store">
-    <meta property="og:description" content="<?= htmlspecialchars(substr($p['description']??'',0,155)) ?>">
-    <meta property="og:image"       content="<?= $imgSrc ?>">
-    <meta property="og:type"        content="product">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-    <style>
-        .zoom-wrapper{overflow:hidden;border-radius:14px;cursor:zoom-in;background:var(--bg-color);}
-        .zoom-wrapper img{transition:transform .4s ease;width:100%;display:block;}
-        .zoom-wrapper:hover img{transform:scale(1.35);}
-        @media(hover:none){.zoom-wrapper:hover img{transform:none;}}
-        .star-span{font-size:1.4rem;cursor:pointer;transition:transform .15s;color:#d1d5db;}
-        .star-span.active,.star-span:hover{color:#f59e0b;transform:scale(1.2);}
-        .review-card{border:1px solid var(--section-border);border-radius:10px;padding:14px;margin-bottom:12px;}
-        @keyframes cartBounce{0%,100%{transform:scale(1)}30%{transform:scale(1.3)}60%{transform:scale(.9)}}
-        .cart-bounce{animation:cartBounce .5s cubic-bezier(.36,.07,.19,.97)}
-    </style>
-</head>
-<body class="page-transitioning">
-<a href="#main-content" class="skip-nav">Skip to main content</a>
 <?php include '../components/navbar.php'; ?>
 
 <main id="main-content" class="container py-5">

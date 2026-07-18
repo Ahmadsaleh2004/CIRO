@@ -4,6 +4,16 @@
 
 let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
 
+function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('wishlist-container');
     if (container && wishlist.length > 0) {
@@ -55,17 +65,18 @@ function renderWishlist() {
     container.innerHTML = wishlist.map(p => {
         const imgSrc = fixWishlistImg(p.image_path || p.image || '');
         const price  = Number(p.price || 0);
+        const name   = typeof escHtml === 'function' ? escHtml(p.name) : (p.name || '');
         return `
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card product-card h-100 shadow border-0 position-relative">
                 <button class="favorite-btn remove-fav" data-id="${p.id}" aria-label="Remove from wishlist">❤️</button>
                 <a href="/Task(1)/pages/product-details.php?id=${p.id}" style="text-decoration:none;">
                     <img src="${imgSrc}" class="card-img-top product-image"
-                         alt="${p.name}" loading="lazy">
+                         alt="${name}" loading="lazy">
                 </a>
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div class="mb-3">
-                        <h5 class="fw-bold">${p.name}</h5>
+                        <h5 class="fw-bold">${name}</h5>
                         <div class="price-box">
                             <span class="new-price fs-5 fw-bold">$${price.toFixed(2)}</span>
                         </div>

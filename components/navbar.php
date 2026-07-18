@@ -139,8 +139,6 @@ if ($loggedInAdmin) {
                         style="background:var(--card-bg);border:1px solid var(--section-border);">
                         <li><a class="dropdown-item" href="/Task(1)/pages/my-info.php"
                                style="color:var(--text-color);">👤 My Info</a></li>
-                        <li><a class="dropdown-item" href="/Task(1)/pages/contactus.php"
-                               style="color:var(--text-color);">💬 Contact Us</a></li>
                         <?php if ($adminRole === 'A'): ?>
                         <li><a class="dropdown-item" href="/Task(1)/admin/backup.php"
                                style="color:var(--text-color);">💾 Backup DB</a></li>

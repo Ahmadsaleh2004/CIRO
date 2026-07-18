@@ -21,26 +21,19 @@ if (empty($_SESSION['admin_in_store_mode'])) {
 $redirect  = $_GET['redirect'] ?? '/Task(1)/admin/support.php';
 $adminName = $_SESSION['admin_name'] ?? 'Admin';
 $csrf      = generateCsrfToken();
+
+$pageTitle = 'Confirm Identity';
+$noIndex = true;
+$extraHead = '
+<style>
+    body { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg-color); }
+    .reauth-card { max-width:420px; width:100%; padding:2.5rem;
+                   border-radius:16px; background:var(--card-bg);
+                   box-shadow:0 8px 32px var(--shadow-color);
+                   border:1px solid var(--section-border); }
+</style>';
+require_once __DIR__ . '/../components/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Identity | Cairo Store Admin</title>
-    <meta name="robots" content="noindex,nofollow">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Task(1)/css/style.css">
-    <link rel="stylesheet" href="/Task(1)/css/dark-theme.css" id="theme-style" disabled>
-    <style>
-        body { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg-color); }
-        .reauth-card { max-width:420px; width:100%; padding:2.5rem;
-                       border-radius:16px; background:var(--card-bg);
-                       box-shadow:0 8px 32px var(--shadow-color);
-                       border:1px solid var(--section-border); }
-    </style>
-</head>
-<body>
 <div class="reauth-card">
     <div class="text-center mb-4">
         <span style="font-size:3rem;">🔐</span>

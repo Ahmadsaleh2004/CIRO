@@ -2,6 +2,7 @@
 /**
  * admin/manage-users.php — الجزء 15/18
  */
+ob_start();
 $pageTitle = 'Manage Users';
 require_once __DIR__ . '/../admin/layout.php';
 require_once __DIR__ . '/../helpers/audit_log_helper.php';
@@ -103,6 +104,11 @@ $csrf = generateCsrfToken();
 <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h1>👥 Manage Users <span class="badge bg-secondary ms-2"><?= $totalUsers ?></span></h1>
     <div class="d-flex gap-2 align-items-center flex-wrap">
+        <?php
+        $csvParams = http_build_query(array_filter(['q' => $search, 'status' => $filter]));
+        $csvUrl    = '/Task(1)/handlers/export_csv.php?type=users' . ($csvParams ? '&' . $csvParams : '');
+        ?>
+        <a href="<?= htmlspecialchars($csvUrl) ?>" class="btn btn-sm btn-export-csv" target="_blank">📄 Export CSV</a>
         <!-- Search -->
         <form class="d-flex search-form" method="GET" action="">
             <?php if ($filter): ?>
@@ -247,14 +253,6 @@ $extraScripts = '<script>
             window.location.href = "/Task(1)/admin/user-details.php?user_id=" + row.dataset.uid;
         });
     });
-
-    function filterStatus(v) {
-        var p = new URLSearchParams(window.location.search);
-        if (v) p.set("status", v); else p.delete("status");
-        p.delete("page");
-        window.location.href = "?" + p.toString();
-    }
-    window.filterStatus = filterStatus;
 
     // ── Delete ────────────────────────────────────────────────
     document.querySelectorAll(".delete-user-btn").forEach(function(btn) {

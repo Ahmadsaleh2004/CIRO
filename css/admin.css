@@ -25,8 +25,9 @@
 
 /* ── Permissions grid ─────────────────────────────── */
 .perm-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 10px; }
-.perm-item { background: var(--bg-color); border: 1px solid var(--section-border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: .86rem; color: var(--text-color); cursor: pointer; transition: border-color .2s; }
-.perm-item:hover { border-color: var(--accent); }
+.perm-item { background: var(--bg-color); border: 1px solid var(--section-border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: .86rem; color: var(--text-color); cursor: pointer; transition: border-color .2s, background .2s; }
+.perm-item:hover { border-color: #16a34a; }
+.perm-item:has(input:checked) { border-color: #16a34a; background: rgba(22,163,74,.08); }
 
 /* ── Order status badges ──────────────────────────── */
 .status-pending   { background:#ffc107; color:#212529; }
@@ -42,7 +43,24 @@
 .add-product-card { background:var(--card-bg); border:2px dashed var(--accent); border-radius:var(--card-radius); display:flex; align-items:center; justify-content:center; height:var(--card-height); cursor:pointer; transition:background .2s, transform .2s; font-size:3rem; color:var(--accent); text-decoration:none; }
 .add-product-card:hover { background:rgba(99,102,241,.08); transform:translateY(-4px); color:var(--accent); }
 
-/* ── Delete product button ────────────────────────── */
+/* ── Export CSV Button ─────────────────────────────── */
+.btn-export-csv {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff !important;
+    border: none;
+    font-weight: 600;
+    letter-spacing: .3px;
+    box-shadow: 0 2px 8px rgba(22,163,74,.25);
+    transition: transform var(--dur-base) var(--ease-bounce),
+                box-shadow var(--dur-base) ease,
+                background var(--dur-base) ease;
+}
+.btn-export-csv:hover {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    box-shadow: 0 6px 20px rgba(22,163,74,.45);
+    transform: translateY(-2px) scale(1.04);
+    color: #fff !important;
+}
 .delete-product-btn { position:absolute; top:8px; right:8px; width:30px; height:30px; border-radius:50%; background:#dc3545; color:#fff; border:none; font-size:13px; cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; transition:transform .2s; }
 .delete-product-btn:hover { transform:scale(1.15); }
 

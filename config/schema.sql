@@ -42,9 +42,9 @@ CREATE TABLE IF NOT EXISTS admins (
     CONSTRAINT fk_admin_added_by FOREIGN KEY (added_by) REFERENCES admins(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed: الأدمن الرئيسي — كلمة السر تُضبط بـ seed_admin_password.php
+-- Seed: الأدمن الرئيسي — كلمة السر والبيانات الفعلية تُضبط بـ seed_admin_password.php
 INSERT INTO admins (full_name, email, password, phone_number, role, added_by)
-VALUES ('Ahmad Saleh','ahmadsaleh9688@gmail.com','PLACEHOLDER','+962799538805','A',NULL);
+VALUES ('Admin User','admin@example.com','PLACEHOLDER','+00000000000','A',NULL);
 
 -- ── 3. admin_permissions ──────────────────────────────────────
 CREATE TABLE IF NOT EXISTS admin_permissions (

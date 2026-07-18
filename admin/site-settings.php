@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     $msg = '✅ Settings saved successfully.';
 }
 
+// بعد الحفظ نجبر إعادة قراءة البيانات المحدّثة مباشرة من DB
 $ws = $pdo->query("SELECT * FROM website_settings LIMIT 1")->fetch() ?: [];
 ?>
 

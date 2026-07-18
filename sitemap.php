@@ -4,11 +4,12 @@
  * http://localhost/Task(1)/sitemap.php
  */
 require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/helpers/settings_helper.php';
 header('Content-Type: application/xml; charset=utf-8');
 
 $pdo      = getDB();
-$settings = $pdo->query("SELECT site_url FROM website_settings LIMIT 1")->fetch();
-$base     = rtrim($settings['site_url'] ?? 'https://cairostore.com', '/');
+$ws       = getSiteSettings();
+$base     = rtrim($ws['site_url'] ?? 'https://cairostore.com', '/');
 
 $products = $pdo->query("SELECT id, date_added FROM products ORDER BY date_added DESC")->fetchAll();
 

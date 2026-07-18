@@ -12,18 +12,12 @@ require_once __DIR__ . '/../config/error_handler.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../helpers/auth_helper.php';
 require_once __DIR__ . '/../helpers/csrf_helper.php';
+require_once __DIR__ . '/../helpers/http_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 $pdo    = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
-
-function respond(bool $ok, string $msg, array $extra = []): void {
-    // أرجع توكن جديد دائماً لمزامنة الـ DOM
-    $extra['csrf_token'] = generateCsrfToken();
-    echo json_encode(array_merge(['success' => $ok, 'message' => $msg], $extra));
-    exit;
-}
 
 // ── GET: list ────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list') {
@@ -55,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list') {
 // ── POST: mark_read ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'mark_read') {
     if (!isUser()) respond(false, 'Unauthorized');
+    verifyCsrfToken($_POST['csrf_token'] ?? '');
     $id = (int)($_POST['id'] ?? 0);
     $uid = getCurrentUserId();
     if ($id) {
@@ -66,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'mark_read') {
 // ── POST: mark_all_read ──────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'mark_all_read') {
     if (!isUser()) respond(false, 'Unauthorized');
+    verifyCsrfToken($_POST['csrf_token'] ?? '');
     $uid = getCurrentUserId();
     $pdo->prepare("UPDATE notifications SET is_read=1 WHERE user_id=?")->execute([$uid]);
     respond(true, 'ok');
